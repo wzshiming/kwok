@@ -25,7 +25,9 @@ record="${ROOT_DIR}/supported_releases.txt"
 function latest_releases() {
   local ref_image=kindest/node
   token=$(curl "https://auth.docker.io/token?service=registry.docker.io&scope=repository:${ref_image}:pull" | jq -r '.token')
+  echo "${token}"
   tags=$(curl "https://registry-1.docker.io/v2/${ref_image}/tags/list" -H "Authorization: Bearer ${token}" | jq -r '.tags | .[]')
+  echo "${tags}"
   echo "${tags}" | grep -e '^v\d\+\.\d\+\.\d\+$' | sed 's/v//g'
 }
 
