@@ -26,7 +26,7 @@ function latest_releases() {
   local ref_image=kindest/node
   token=$(curl "https://auth.docker.io/token?service=registry.docker.io&scope=repository:${ref_image}:pull" | jq -r '.token')
   tags=$(curl "https://registry-1.docker.io/v2/${ref_image}/tags/list" -H "Authorization: Bearer ${token}" | jq -r '.tags | .[]')
-  echo "${tags}" | grep -e '^v\d\+\.\d\+\.\d\+$'
+  echo "${tags}" | grep -e '^v\d\+\.\d\+\.\d\+$' | sed 's/v//g'
 }
 
 # Get historical supported releases
@@ -58,7 +58,7 @@ function send_pr() {
   local status
   local branch
   local body
-  local latest
+
   status=$(git status -s)
   if [[ "${status}" == "" ]]; then
     echo "No modification"
@@ -104,11 +104,23 @@ $(git diff)
 }
 
 function main() {
-  out="$(bump $(record_releases) $(latest_releases) | sort --reverse --version-sort)"
+  local record_data
+  local latest_data
+  record_data="$(record_releases)"
+  latest_data="$(latest_releases)"
+
+  echo "record_data"
+  echo "${record_data}"
+
+  echo "latest_data"
+  echo "${latest_data}"
+  out="$(bump ${record_data} ${latest_data} | sort --reverse --version-sort)"
 
   if [[ "${out}" == "$(record_releases)" ]]; then
+    echo "No update"
     return 0
   fi
+
   echo "${out}" >"${record}"
 
   if [[ "${SEND_PR}" == "true" ]]; then
