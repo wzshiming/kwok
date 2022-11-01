@@ -117,7 +117,7 @@ ${diff_data}
 
 /kind feature
 "
-  gh pr create --title="Automated Bump supported_releases.txt" --body="${body}"
+  gh pr create --title="Automated Bump supported_releases.txt" --body="${body}" --label=ok-to-test
 }
 
 function main() {
