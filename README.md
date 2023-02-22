@@ -1,4 +1,6 @@
 # `KWOK` (`K`ubernetes `W`ith`O`ut `K`ubelet)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwzshiming%2Fkwok.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwzshiming%2Fkwok?ref=badge_shield)
+
 
 <img align="right" width="180px" src="./logo/kwok.svg"/>
 
@@ -28,3 +30,7 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 [community page]: https://kubernetes.io/community/
 [contributor guide]: https://kwok.sigs.k8s.io/docs/contributing/getting-started
 [code of conduct]: https://github.com/kubernetes-sigs/kwok/blob/main/code-of-conduct.md
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwzshiming%2Fkwok.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwzshiming%2Fkwok?ref=badge_large)
