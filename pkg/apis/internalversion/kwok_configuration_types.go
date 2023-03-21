@@ -79,4 +79,7 @@ type KwokConfigurationOptions struct {
 
 	// EnableProfiling enables /debug/pprof handler.
 	EnableProfilingHandler bool
+
+	// SeparateForNodes specifies whether to use a separate connection for each node.
+	SeparateForNodes bool
 }

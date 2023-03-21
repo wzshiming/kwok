@@ -33,7 +33,7 @@ import (
 	"sigs.k8s.io/kwok/stages"
 )
 
-func TestController(t *testing.T) {
+func TestHostController(t *testing.T) {
 	nodes := []runtime.Object{
 		&corev1.Node{
 			ObjectMeta: metav1.ObjectMeta{
@@ -72,18 +72,19 @@ func TestController(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		conf          Config
+		conf          HostControllerConfig
 		wantNodePhase map[string]corev1.NodePhase
 		wantErr       bool
 	}{
 		{
 			name: "node controller test: manage all nodes",
-			conf: Config{
-				ClientSet:      fake.NewSimpleClientset(nodes...),
-				ManageAllNodes: true,
-				NodeStages:     nodeStages,
-				PodStages:      podStages,
-				CIDR:           "10.0.0.1/24",
+			conf: HostControllerConfig{
+				ClientSet:   fake.NewSimpleClientset(nodes...),
+				NodeStages:  nodeStages,
+				PodStages:   podStages,
+				CIDR:        "10.0.0.1/24",
+				FuncMap:     defaultFuncMap,
+				Parallelism: 1,
 			},
 			wantNodePhase: map[string]corev1.NodePhase{
 				"node-0": corev1.NodeRunning,
@@ -94,12 +95,14 @@ func TestController(t *testing.T) {
 		},
 		{
 			name: "node controller test: manage nodes with label selector `manage-by-kwok=true`",
-			conf: Config{
+			conf: HostControllerConfig{
 				ClientSet:                    fake.NewSimpleClientset(nodes...),
 				ManageNodesWithLabelSelector: "manage-by-kwok",
 				NodeStages:                   nodeStages,
 				PodStages:                    podStages,
 				CIDR:                         "10.0.0.1/24",
+				FuncMap:                      defaultFuncMap,
+				Parallelism:                  1,
 			},
 			wantNodePhase: map[string]corev1.NodePhase{
 				"node-0": corev1.NodeRunning,
@@ -110,12 +113,14 @@ func TestController(t *testing.T) {
 		},
 		{
 			name: "node controller test: manage nodes with annotation selector `manage-by-kwok=true`",
-			conf: Config{
+			conf: HostControllerConfig{
 				ClientSet:                         fake.NewSimpleClientset(nodes...),
 				ManageNodesWithAnnotationSelector: "manage-by-kwok=true",
 				NodeStages:                        nodeStages,
 				PodStages:                         podStages,
 				CIDR:                              "10.0.0.1/24",
+				FuncMap:                           defaultFuncMap,
+				Parallelism:                       1,
 			},
 			wantNodePhase: map[string]corev1.NodePhase{
 				"node-0": corev1.NodePending,
@@ -136,7 +141,7 @@ func TestController(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctr, err := NewController(tt.conf)
+			ctr, err := NewHostController(tt.conf)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("NewController() error = %v, wantErr %v", err, tt.wantErr)
 			}

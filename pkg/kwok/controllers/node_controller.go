@@ -54,8 +54,8 @@ type NodeController struct {
 	nodePort                              int
 	disregardStatusWithAnnotationSelector labels.Selector
 	disregardStatusWithLabelSelector      labels.Selector
-	manageNodesWithAnnotationSelector     string
 	manageNodesWithLabelSelector          string
+	manageNodeWithName                    string
 	nodeSelectorFunc                      func(node *corev1.Node) bool
 	lockPodsOnNodeFunc                    func(ctx context.Context, nodeName string) error
 	nodesSets                             maps.SyncMap[string, *NodeInfo]
@@ -75,8 +75,8 @@ type NodeControllerConfig struct {
 	LockPodsOnNodeFunc                    func(ctx context.Context, nodeName string) error
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
-	ManageNodesWithAnnotationSelector     string
 	ManageNodesWithLabelSelector          string
+	ManageNodeWithName                    string
 	NodeIP                                string
 	NodeName                              string
 	NodePort                              int
@@ -114,8 +114,8 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 		nodeSelectorFunc:                      conf.NodeSelectorFunc,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
-		manageNodesWithAnnotationSelector:     conf.ManageNodesWithAnnotationSelector,
 		manageNodesWithLabelSelector:          conf.ManageNodesWithLabelSelector,
+		manageNodeWithName:                    conf.ManageNodeWithName,
 		lockPodsOnNodeFunc:                    conf.LockPodsOnNodeFunc,
 		nodeIP:                                conf.NodeIP,
 		nodeName:                              conf.NodeName,
@@ -143,8 +143,11 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 func (c *NodeController) Start(ctx context.Context) error {
 	go c.LockNodes(ctx, c.nodeChan)
 
-	opt := metav1.ListOptions{
-		LabelSelector: c.manageNodesWithLabelSelector,
+	opt := metav1.ListOptions{}
+	if c.manageNodeWithName != "" {
+		opt.FieldSelector = fmt.Sprintf("metadata.name=%s", c.manageNodeWithName)
+	} else {
+		opt.LabelSelector = c.manageNodesWithLabelSelector
 	}
 	err := c.WatchNodes(ctx, c.nodeChan, opt)
 	if err != nil {

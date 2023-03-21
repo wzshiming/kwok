@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/consts"
+	"sigs.k8s.io/kwok/pkg/kwok/clientsets"
 	"sigs.k8s.io/kwok/pkg/kwok/controllers"
 	"sigs.k8s.io/kwok/pkg/kwok/server"
 	"sigs.k8s.io/kwok/pkg/log"
@@ -94,9 +95,9 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 func runE(ctx context.Context, flags *flagpole) error {
 	logger := log.FromContext(ctx)
+	var err error
 
 	if flags.Kubeconfig != "" {
-		var err error
 		flags.Kubeconfig, err = path.Expand(flags.Kubeconfig)
 		if err != nil {
 			return err
@@ -108,7 +109,12 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	}
 
-	clientset, err := newClientset(ctx, flags.Master, flags.Kubeconfig)
+	var cset clientsets.Clientsets
+	if flags.Options.SeparateForNodes {
+		cset, err = clientsets.NewClientsetManager(ctx, flags.Master, flags.Kubeconfig)
+	} else {
+		cset, err = clientsets.NewClientsetOnce(ctx, flags.Master, flags.Kubeconfig)
+	}
 	if err != nil {
 		return err
 	}
@@ -126,7 +132,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		)
 	}
 
-	err = waitForReady(ctx, clientset)
+	err = waitForReady(ctx, cset)
 	if err != nil {
 		return err
 	}
@@ -148,8 +154,9 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	}
 
-	ctr, err := controllers.NewController(controllers.Config{
-		ClientSet:                             clientset,
+	ctr, err := controllers.NewMainController(controllers.MainControllerConfig{
+		ClientSet:                             cset,
+		SeparateForNodes:                      flags.Options.SeparateForNodes,
 		EnableCNI:                             flags.Options.EnableCNI,
 		ManageAllNodes:                        flags.Options.ManageAllNodes,
 		ManageNodesWithAnnotationSelector:     flags.Options.ManageNodesWithAnnotationSelector,
@@ -248,7 +255,7 @@ func filterStages(stages []*internalversion.Stage, apiGroup, kind string) []*int
 	})
 }
 
-func waitForReady(ctx context.Context, clientset kubernetes.Interface) error {
+func waitForReady(ctx context.Context, cset clientsets.Clientsets) error {
 	logger := log.FromContext(ctx)
 	backoff := wait.Backoff{
 		Duration: 1 * time.Second,
@@ -256,7 +263,12 @@ func waitForReady(ctx context.Context, clientset kubernetes.Interface) error {
 		Jitter:   0.1,
 		Steps:    5,
 	}
-	err := wait.ExponentialBackoffWithContext(ctx, backoff,
+	clientset, err := cset.Get(ctx, clientsets.InternalClientsetKey)
+	if err != nil {
+		return err
+	}
+
+	err = wait.ExponentialBackoffWithContext(ctx, backoff,
 		func() (bool, error) {
 			_, err := clientset.CoreV1().Nodes().List(ctx,
 				metav1.ListOptions{

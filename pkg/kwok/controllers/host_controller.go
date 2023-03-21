@@ -60,41 +60,37 @@ var (
 	}
 )
 
-// Controller is a fake kubelet implementation that can be used to test
-type Controller struct {
+// HostController is a controller that manages the fake hosts
+type HostController struct {
 	nodes       *NodeController
 	pods        *PodController
 	broadcaster record.EventBroadcaster
 	clientSet   kubernetes.Interface
 }
 
-// Config is the configuration for the controller
-type Config struct {
+// HostControllerConfig is the configuration for the HostController
+type HostControllerConfig struct {
 	EnableCNI                             bool
 	ClientSet                             kubernetes.Interface
-	ManageAllNodes                        bool
 	ManageNodesWithAnnotationSelector     string
 	ManageNodesWithLabelSelector          string
+	ManageNodeWithName                    string
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
 	CIDR                                  string
 	NodeIP                                string
 	NodeName                              string
 	NodePort                              int
+	Parallelism                           int
 	PodStages                             []*internalversion.Stage
 	NodeStages                            []*internalversion.Stage
+	FuncMap                               template.FuncMap
 }
 
-// NewController creates a new fake kubelet controller
-func NewController(conf Config) (*Controller, error) {
+// NewHostController creates a new HostController
+func NewHostController(conf HostControllerConfig) (*HostController, error) {
 	var nodeSelectorFunc func(node *corev1.Node) bool
 	switch {
-	case conf.ManageAllNodes:
-		nodeSelectorFunc = func(node *corev1.Node) bool {
-			return true
-		}
-		conf.ManageNodesWithAnnotationSelector = ""
-		conf.ManageNodesWithLabelSelector = ""
 	case conf.ManageNodesWithAnnotationSelector != "":
 		selector, err := labels.Parse(conf.ManageNodesWithAnnotationSelector)
 		if err != nil {
@@ -103,13 +99,10 @@ func NewController(conf Config) (*Controller, error) {
 		nodeSelectorFunc = func(node *corev1.Node) bool {
 			return selector.Matches(labels.Set(node.Annotations))
 		}
-	case conf.ManageNodesWithLabelSelector != "":
-		// client-go supports label filtering, so return true is ok.
+	default:
 		nodeSelectorFunc = func(node *corev1.Node) bool {
 			return true
 		}
-	default:
-		return nil, fmt.Errorf("no nodes are managed")
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -124,15 +117,15 @@ func NewController(conf Config) (*Controller, error) {
 		NodePort:                              conf.NodePort,
 		DisregardStatusWithAnnotationSelector: conf.DisregardStatusWithAnnotationSelector,
 		DisregardStatusWithLabelSelector:      conf.DisregardStatusWithLabelSelector,
-		ManageNodesWithAnnotationSelector:     conf.ManageNodesWithAnnotationSelector,
 		ManageNodesWithLabelSelector:          conf.ManageNodesWithLabelSelector,
+		ManageNodeWithName:                    conf.ManageNodeWithName,
 		NodeSelectorFunc:                      nodeSelectorFunc,
 		LockPodsOnNodeFunc: func(ctx context.Context, nodeName string) error {
 			return lockPodsOnNodeFunc(ctx, nodeName)
 		},
 		Stages:              conf.NodeStages,
-		LockNodeParallelism: 16,
-		FuncMap:             defaultFuncMap,
+		LockNodeParallelism: conf.Parallelism,
+		FuncMap:             conf.FuncMap,
 		Recorder:            recorder,
 	})
 	if err != nil {
@@ -147,9 +140,9 @@ func NewController(conf Config) (*Controller, error) {
 		DisregardStatusWithAnnotationSelector: conf.DisregardStatusWithAnnotationSelector,
 		DisregardStatusWithLabelSelector:      conf.DisregardStatusWithLabelSelector,
 		Stages:                                conf.PodStages,
-		LockPodParallelism:                    16,
+		LockPodParallelism:                    conf.Parallelism,
 		NodeGetFunc:                           nodes.Get,
-		FuncMap:                               defaultFuncMap,
+		FuncMap:                               conf.FuncMap,
 		Recorder:                              recorder,
 	})
 	if err != nil {
@@ -158,7 +151,7 @@ func NewController(conf Config) (*Controller, error) {
 
 	lockPodsOnNodeFunc = pods.LockPodsOnNode
 
-	n := &Controller{
+	n := &HostController{
 		pods:        pods,
 		nodes:       nodes,
 		broadcaster: eventBroadcaster,
@@ -169,7 +162,7 @@ func NewController(conf Config) (*Controller, error) {
 }
 
 // Start starts the controller
-func (c *Controller) Start(ctx context.Context) error {
+func (c *HostController) Start(ctx context.Context) error {
 	c.broadcaster.StartRecordingToSink(&clientcorev1.EventSinkImpl{Interface: c.clientSet.CoreV1().Events("")})
 
 	err := c.pods.Start(ctx)
