@@ -1,0 +1,5 @@
+{{- $key := .Get 0 }}
+{{- $raw := resources.Get "variable.json" }}
+{{- $variable := $raw.Content | transform.Unmarshal }}
+{{- $value := index $variable $key }}
+{{- with $value -}} {{- . -}} {{- else -}} unknown {{- end -}}

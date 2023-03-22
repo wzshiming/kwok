@@ -6,15 +6,11 @@ This document walks you through how to deploy `kwok` in a Kubernetes cluster.
 
 {{< /hint >}}
 
-## Variables preparation
+## Preparations
 
 ``` bash
 # Temporary directory
 KWOK_WORK_DIR=$(mktemp -d)
-# KWOK repository
-KWOK_REPO=kubernetes-sigs/kwok
-# Get latest
-KWOK_LATEST_RELEASE=$(curl "https://api.github.com/repos/${KWOK_REPO}/releases/latest" | jq -r '.tag_name')
 ```
 
 ## Render kustomization yaml
@@ -27,9 +23,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 images:
   - name: registry.k8s.io/kwok/kwok
-    newTag: "${KWOK_LATEST_RELEASE}"
+    newTag: "v{{< variable "version" >}}"
 resources:
-  - "https://github.com/${KWOK_REPO}/kustomize/kwok?ref=${KWOK_LATEST_RELEASE}"
+  - "https://github.com/{{< variable "repo" >}}/kustomize/kwok?ref=v{{< variable "version" >}}"
 EOF
 ```
 

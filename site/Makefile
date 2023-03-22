@@ -19,14 +19,14 @@ HUGO_DOCKER  = docker run --rm -it --volume $(realpath $(CURDIR)/..):/src -p 131
 HUGO		 = $(if $(HUGO_BINARY),$(HUGO_BINARY),$(HUGO_DOCKER))
 
 .PHONY: serve
-serve: themes/hugo-book
+serve: themes/hugo-book txt
 	$(HUGO) server --bind="0.0.0.0" \
 	--ignoreCache \
 	--buildFuture \
 	--disableFastRender
 
 .PHONY: build
-build: themes/hugo-book
+build: themes/hugo-book txt
 	$(HUGO) --enableGitInfo --buildFuture --minify
 
 themes/hugo-book:
@@ -45,3 +45,19 @@ check-image-version:
 .PHONY: check-binary-version
 check-binary-version:
 	curl -sL https://api.github.com/repos/gohugoio/hugo/releases/tags/v$(HUGO_VERSION)
+
+.PHONY: txt
+txt: assets/latest.txt assets/kube-latest.txt
+
+assets/latest.txt:
+	curl -sL https://api.github.com/repos/kubernetes-sigs/kwok/releases/latest | jq -r '.tag_name' | sed 's/^v//' | sed -n 1p | tr -d '\n' > $@
+
+assets/kube-latest.txt:
+	cat ../supported_releases.txt | sed -n 1p | tr -d '\n' > $@
+
+assets/variable.json:
+	echo '{ \
+		"version": "$(shell curl -sL https://api.github.com/repos/kubernetes-sigs/kwok/releases/latest | jq -r '.tag_name' | sed 's/^v//' | sed -n 1p | tr -d '\n')", \
+		"kubeVersion": "$(shell cat ../supported_releases.txt | sed -n 1p | tr -d '\n')", \
+		"repo": "kubernetes-sigs/kwok" \
+	}' > $@
