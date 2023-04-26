@@ -42,8 +42,12 @@ type KwokctlConfiguration struct {
 	// Options holds information about the default value.
 	Options KwokctlConfigurationOptions `json:"options,omitempty"`
 	// Components holds information about the components.
+	// +patchMergeKey=name
+	// +patchStrategy=merge
 	Components []Component `json:"components,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 	// ComponentsPatches holds information about the components patches.
+	// +patchMergeKey=name
+	// +patchStrategy=merge
 	ComponentsPatches []ComponentPatches `json:"componentsPatches,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 }
 

@@ -32,7 +32,7 @@ function codegen() {
   echo "Update codegen"
 
   bash "${CODEGEN_PKG}"/generate-internal-groups.sh \
-    "deepcopy,defaulter,conversion" \
+    "deepcopy,defaulter,conversion,openapi" \
     "${KWOK_API_PACKAGE}" \
     "${KWOK_API_PACKAGE}" \
     "${KWOK_API_PACKAGE}" \
