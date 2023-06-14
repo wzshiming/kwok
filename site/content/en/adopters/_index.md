@@ -1,6 +1,8 @@
 ---
 title: Adopters
 bookToc: false
+aliases:
+  - /docs/adoption/
 ---
 
 # Adopters

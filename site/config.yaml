@@ -227,7 +227,7 @@ menu:
       weight: 10
     - identifier: adopters
       title: Adopters
-      pageRef: "/docs/adopters"
+      pageRef: "/adopters"
       weight: 20
     - identifier: roadmap
       title: Roadmap ⛓
@@ -235,5 +235,27 @@ menu:
       weight: 30
     - identifier: source-code
       title: Source Code ⛓
-      url: https://github.com/kubernetes-sigs/kwok
+      url: https://github.com/sigs.k8s.io/kwok
       weight: 40
+
+    - identifier: contact
+      title: Contact
+      weight: 50
+    - identifier: slack
+      title: Slack
+      weight: 5010
+      params:
+        collapse: never
+      parent: contact
+    - identifier: join-slack
+      title: Join Slack ⛓
+      url: https://slack.k8s.io/
+      parent: slack
+    - identifier: sharp-kwok
+      title: '#kwok ⛓'
+      url: https://kubernetes.slack.com/messages/kwok/
+      parent: slack
+    - identifier: sharp-kwok-dev
+      title: '#kwok-dev ⛓'
+      url: https://kubernetes.slack.com/messages/kwok-dev/
+      parent: slack
