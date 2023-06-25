@@ -321,3 +321,26 @@ func ConvertToInternalMetric(in *v1alpha1.Metric) (*Metric, error) {
 	}
 	return &out, nil
 }
+
+// ConvertToV1Alpha1ClusterMetric converts an internal version ClusterMetric to a v1alpha1.ClusterMetric.
+func ConvertToV1Alpha1ClusterMetric(in *ClusterMetric) (*v1alpha1.ClusterMetric, error) {
+	var out v1alpha1.ClusterMetric
+	out.APIVersion = v1alpha1.GroupVersion.String()
+	out.Kind = v1alpha1.ClusterMetricKind
+	err := Convert_internalversion_ClusterMetric_To_v1alpha1_ClusterMetric(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ConvertToInternalClusterMetric converts a v1alpha1.ClusterMetric to an internal version.
+func ConvertToInternalClusterMetric(in *v1alpha1.ClusterMetric) (*ClusterMetric, error) {
+	var out ClusterMetric
+	v1alpha1.SetObjectDefaults_ClusterMetric(in)
+	err := Convert_v1alpha1_ClusterMetric_To_internalversion_ClusterMetric(in, &out, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}

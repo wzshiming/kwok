@@ -19,6 +19,7 @@ package server
 import (
 	"fmt"
 
+	"github.com/emicklei/go-restful/v3"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"sigs.k8s.io/kwok/pkg/kwok/metrics"
@@ -55,5 +56,34 @@ func (s *Server) InstallMetrics() error {
 		}
 		s.restfulCont.Handle(m.Spec.Path, handler)
 	}
+
+	for _, m := range s.config.ClusterMetrics {
+
+		ws := new(restful.WebService)
+		ws.Route(ws.GET(m.Spec.Path).
+			To(s.getExec).
+			Operation("getMetric"))
+		s.restfulCont.Add(ws)
+	}
 	return nil
+}
+
+func (s *Server) getMetric(req *restful.Request, resp *restful.Response) {
+	nodeName := req.PathParameter("nodeName")
+
+	for _, m := range s.config.ClusterMetrics {
+		if !m.Spec.Selector.Match(nodeName) {
+			continue
+		}
+
+		handler, err := metrics.NewMetricsUpdateHandler(metrics.UpdateHandlerConfig{
+			NodeName:    m.Name,
+			Metrics:     m,
+			Controller:  controller,
+			Environment: env,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create metrics update handler: %w", err)
+		}
+	}
 }

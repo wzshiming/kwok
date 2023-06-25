@@ -25,3 +25,10 @@ type ObjectSelector struct {
 	// if not set, all names will be matched.
 	MatchNames []string `json:"matchNames,omitempty"`
 }
+
+// ObjectSelectorNames holds information how to match based on name.
+type ObjectSelectorNames struct {
+	// MatchNames is a list of names to match.
+	// if not set, all names will be matched.
+	MatchNames []string `json:"matchNames,omitempty"`
+}

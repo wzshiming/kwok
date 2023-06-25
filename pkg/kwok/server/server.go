@@ -58,6 +58,7 @@ type Config struct {
 	Logs                []*internalversion.Logs
 	ClusterAttaches     []*internalversion.ClusterAttach
 	Attaches            []*internalversion.Attach
+	ClusterMetrics      []*internalversion.ClusterMetric
 	Metrics             []*internalversion.Metric
 	Controller          *controllers.Controller
 }

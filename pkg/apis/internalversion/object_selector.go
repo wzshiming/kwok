@@ -44,3 +44,22 @@ func (s *ObjectSelector) Match(name, namespace string) bool {
 	}
 	return true
 }
+
+// ObjectSelectorNames holds information how to match based on name.
+type ObjectSelectorNames struct {
+	// MatchNames is a list of names to match.
+	// if not set, all names will be matched.
+	MatchNames []string
+}
+
+// Match returns true if name is specified within the selector
+// If the match field is empty, the match on that field is considered to be true.
+func (s *ObjectSelectorNames) Match(name string) bool {
+	if s == nil {
+		return true
+	}
+	if len(s.MatchNames) > 0 && !slices.Contains(s.MatchNames, name) {
+		return false
+	}
+	return true
+}

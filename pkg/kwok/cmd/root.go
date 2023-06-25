@@ -171,6 +171,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	ctx = log.NewContext(ctx, logger.With("id", id))
 
 	metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
+	clustermetrics := config.FilterWithTypeFromContext[*internalversion.ClusterMetric](ctx)
 
 	ctr, err := controllers.NewController(controllers.Config{
 		Clock:                                 clock.RealClock{},
@@ -220,6 +221,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 			Logs:                logs,
 			ClusterAttaches:     clusterAttaches,
 			Attaches:            attaches,
+			ClusterMetrics:      clustermetrics,
 			Metrics:             metrics,
 			Controller:          ctr,
 		}
