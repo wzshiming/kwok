@@ -110,6 +110,93 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 	}
 
+	stagesData := config.FilterWithTypeFromContext[*internalversion.Stage](ctx)
+	err := checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.StageKind, stagesData)
+	if err != nil {
+		return err
+	}
+
+	nodeStages := filterStages(stagesData, "v1", "Node")
+	podStages := filterStages(stagesData, "v1", "Pod")
+	if !slices.Contains(flags.Options.EnableCRDs, v1alpha1.StageKind) {
+		if len(nodeStages) == 0 {
+			logger.Warn("No node stages found, using default node stages")
+			nodeStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
+			if err != nil {
+				return err
+			}
+			if flags.Options.NodeLeaseDurationSeconds == 0 {
+				nodeHeartbeatStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
+				if err != nil {
+					return err
+				}
+				nodeStages = append(nodeStages, nodeHeartbeatStages...)
+			}
+		}
+
+		if len(podStages) == 0 {
+			logger.Warn("No pod stages found, using default pod stages")
+			podStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultPodStages))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	clusterPortForwards := config.FilterWithTypeFromContext[*internalversion.ClusterPortForward](ctx)
+	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterPortForwardKind, clusterPortForwards)
+	if err != nil {
+		return err
+	}
+
+	portForwards := config.FilterWithTypeFromContext[*internalversion.PortForward](ctx)
+	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.PortForwardKind, portForwards)
+	if err != nil {
+		return err
+	}
+
+	clusterExecs := config.FilterWithTypeFromContext[*internalversion.ClusterExec](ctx)
+	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterExecKind, clusterExecs)
+	if err != nil {
+		return err
+	}
+
+	execs := config.FilterWithTypeFromContext[*internalversion.Exec](ctx)
+	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ExecKind, execs)
+	if err != nil {
+		return err
+	}
+
+	clusterLogs := config.FilterWithTypeFromContext[*internalversion.ClusterLogs](ctx)
+	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterLogsKind, clusterLogs)
+	if err != nil {
+		return err
+	}
+
+	logs := config.FilterWithTypeFromContext[*internalversion.Logs](ctx)
+	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.LogsKind, logs)
+	if err != nil {
+		return err
+	}
+
+	clusterAttaches := config.FilterWithTypeFromContext[*internalversion.ClusterAttach](ctx)
+	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.ClusterAttachKind, clusterAttaches)
+	if err != nil {
+		return err
+	}
+
+	attaches := config.FilterWithTypeFromContext[*internalversion.Attach](ctx)
+	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.AttachKind, attaches)
+	if err != nil {
+		return err
+	}
+
+	metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
+	err = checkConfigOrCRD(flags.Options.EnableCRDs, v1alpha1.MetricKind, metrics)
+	if err != nil {
+		return err
+	}
+
 	if flags.Kubeconfig == "" && flags.Master == "" {
 		logger.Warn("Neither --kubeconfig nor --master was specified")
 		logger.Info("Using the inClusterConfig")
@@ -146,45 +233,11 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	stagesData := config.FilterWithTypeFromContext[*internalversion.Stage](ctx)
-	var nodeStages []*internalversion.Stage
-	var podStages []*internalversion.Stage
-
-	if slices.Contains(flags.Options.EnableCRDs, v1alpha1.StageKind) {
-		if len(stagesData) != 0 {
-			return fmt.Errorf("stage already exists, cannot watch CRD")
-		}
-	} else {
-		nodeStages = filterStages(stagesData, "v1", "Node")
-		if len(nodeStages) == 0 {
-			nodeStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultNodeStages))
-			if err != nil {
-				return err
-			}
-			if flags.Options.NodeLeaseDurationSeconds == 0 {
-				nodeHeartbeatStages, err := controllers.NewStagesFromYaml([]byte(stages.DefaultNodeHeartbeatStages))
-				if err != nil {
-					return err
-				}
-				nodeStages = append(nodeStages, nodeHeartbeatStages...)
-			}
-		}
-		podStages = filterStages(stagesData, "v1", "Pod")
-		if len(podStages) == 0 {
-			podStages, err = controllers.NewStagesFromYaml([]byte(stages.DefaultPodStages))
-			if err != nil {
-				return err
-			}
-		}
-	}
-
 	id, err := controllers.Identity()
 	if err != nil {
 		return err
 	}
 	ctx = log.NewContext(ctx, logger.With("id", id))
-
-	metrics := config.FilterWithTypeFromContext[*internalversion.Metric](ctx)
 
 	ctr, err := controllers.NewController(controllers.Config{
 		Clock:                                 clock.RealClock{},
@@ -218,14 +271,6 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 
 	if serverAddress != "" {
-		clusterPortForwards := config.FilterWithTypeFromContext[*internalversion.ClusterPortForward](ctx)
-		portForwards := config.FilterWithTypeFromContext[*internalversion.PortForward](ctx)
-		clusterExecs := config.FilterWithTypeFromContext[*internalversion.ClusterExec](ctx)
-		execs := config.FilterWithTypeFromContext[*internalversion.Exec](ctx)
-		clusterLogs := config.FilterWithTypeFromContext[*internalversion.ClusterLogs](ctx)
-		logs := config.FilterWithTypeFromContext[*internalversion.Logs](ctx)
-		clusterAttaches := config.FilterWithTypeFromContext[*internalversion.ClusterAttach](ctx)
-		attaches := config.FilterWithTypeFromContext[*internalversion.Attach](ctx)
 		config := server.Config{
 			TypedKwokClient:     typedKwokClient,
 			EnableCRDs:          flags.Options.EnableCRDs,
@@ -272,6 +317,14 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 
 	<-ctx.Done()
+	return nil
+}
+
+func checkConfigOrCRD[T metav1.Object](crds []string, kind string, crs []T) error {
+	if slices.Contains(crds, kind) && len(crs) != 0 {
+		return fmt.Errorf("%s already exists in --config, so please remove it, or remove %s from --enable-crd", kind, kind)
+	}
+
 	return nil
 }
 
