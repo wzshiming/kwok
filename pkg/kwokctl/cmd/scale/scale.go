@@ -102,11 +102,13 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		default:
 			return fmt.Errorf("resource %s is not exists", resourceKind)
 		case "pod":
+			logger.Info("No pod resource found, use default pod resource")
 			err = utilyaml.Unmarshal([]byte(resource.DefaultPod), &krc)
 			if err != nil {
 				return err
 			}
 		case "node":
+			logger.Info("No node resource found, use default node resource")
 			err = utilyaml.Unmarshal([]byte(resource.DefaultNode), &krc)
 			if err != nil {
 				return err
