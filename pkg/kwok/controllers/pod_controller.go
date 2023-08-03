@@ -144,15 +144,12 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		readOnlyFunc:                          conf.ReadOnlyFunc,
 		enableMetrics:                         conf.EnableMetrics,
 	}
-	funcMap := gotpl.FuncMap{
+	funcMap := maps.Merge(conf.FuncMap, gotpl.FuncMap{
 		"NodeIP":     c.funcNodeIP,
 		"PodIP":      c.funcPodIP,
 		"NodeIPWith": c.funcNodeIPWith,
 		"PodIPWith":  c.funcPodIPWith,
-	}
-	for k, v := range conf.FuncMap {
-		funcMap[k] = v
-	}
+	})
 	c.renderer = gotpl.NewRenderer(funcMap)
 	return c, nil
 }

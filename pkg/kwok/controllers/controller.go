@@ -43,6 +43,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
+	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
@@ -182,6 +183,12 @@ func (c *Controller) Start(ctx context.Context) error {
 		}
 	}
 
+	funcMap := maps.Merge(defaultFuncMap, gotpl.FuncMap{
+		"ID": func() string {
+			return conf.ID
+		},
+	})
+
 	if conf.NodeLeaseDurationSeconds != 0 {
 		leaseDuration := time.Duration(conf.NodeLeaseDurationSeconds) * time.Second
 		// https://github.com/kubernetes/kubernetes/blob/02f4d643eae2e225591702e1bbf432efea453a26/pkg/kubelet/kubelet.go#L199-L200
@@ -304,7 +311,7 @@ func (c *Controller) Start(ctx context.Context) error {
 		},
 		Lifecycle:            nodeLifecycleGetter,
 		PlayStageParallelism: conf.NodePlayStageParallelism,
-		FuncMap:              defaultFuncMap,
+		FuncMap:              funcMap,
 		Recorder:             recorder,
 		ReadOnlyFunc:         readOnlyFunc,
 		EnableMetrics:        conf.EnableMetrics,
@@ -325,7 +332,7 @@ func (c *Controller) Start(ctx context.Context) error {
 		PlayStageParallelism:                  conf.PodPlayStageParallelism,
 		Namespace:                             corev1.NamespaceAll,
 		NodeGetFunc:                           nodes.Get,
-		FuncMap:                               defaultFuncMap,
+		FuncMap:                               funcMap,
 		Recorder:                              recorder,
 		ReadOnlyFunc:                          readOnlyFunc,
 		EnableMetrics:                         conf.EnableMetrics,
