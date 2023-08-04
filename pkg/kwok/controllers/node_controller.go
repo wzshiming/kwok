@@ -252,9 +252,6 @@ func (c *NodeController) watchResources(ctx context.Context, opt metav1.ListOpti
 		return err
 	}
 
-	// TODO: should record last resourceVersion for next round
-	opt.AllowWatchBookmarks = true
-
 	logger := log.FromContext(ctx)
 	go func() {
 		rc := watcher.ResultChan()
@@ -283,8 +280,6 @@ func (c *NodeController) watchResources(ctx context.Context, opt metav1.ListOpti
 				case watch.Added:
 					node := event.Object.(*corev1.Node)
 					if c.need(node) {
-						exist := c.Has(node.Name)
-
 						c.putNodeInfo(node)
 						if c.readOnly(node.Name) {
 							logger.Debug("Skip node",
@@ -296,7 +291,7 @@ func (c *NodeController) watchResources(ctx context.Context, opt metav1.ListOpti
 							c.preprocessChan <- node
 						}
 
-						if c.onNodeManagedFunc != nil && !exist {
+						if c.onNodeManagedFunc != nil {
 							c.onNodeManagedFunc(node.Name)
 						}
 					}
