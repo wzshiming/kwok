@@ -202,25 +202,18 @@ func (c *Cluster) Save(ctx context.Context) error {
 func (c *Cluster) getDefaultStages(updateFrequency int64, nodeHeartbeat bool) ([]config.InternalObject, error) {
 	objs := []config.InternalObject{}
 
-	nodeInit, err := config.Unmarshal([]byte(nodefast.DefaultNodeInit))
+	nodeInit, err := config.UnmarshalWithType[*internalversion.Stage]([]byte(nodefast.DefaultNodeInit))
 	if err != nil {
 		return nil, err
-	}
-	if _, ok := nodeInit.(*internalversion.Stage); !ok {
-		return nil, fmt.Errorf("failed to get node init stage %T", nodeInit)
 	}
 	objs = append(objs, nodeInit)
 
 	if nodeHeartbeat {
-		nodeHeartbeat, err := config.Unmarshal([]byte(heartbeat.DefaultNodeHeartbeat))
+		nodeHeartbeatStage, err := config.UnmarshalWithType[*internalversion.Stage]([]byte(heartbeat.DefaultNodeHeartbeat))
 		if err != nil {
 			return nil, err
 		}
 
-		nodeHeartbeatStage, ok := nodeHeartbeat.(*internalversion.Stage)
-		if !ok {
-			return nil, fmt.Errorf("failed to get node heartbeat stage %T", nodeHeartbeat)
-		}
 		if updateFrequency > 0 {
 			nodeHeartbeatStage.Spec.Delay.DurationMilliseconds = format.Ptr(updateFrequency)
 			nodeHeartbeatStage.Spec.Delay.JitterDurationMilliseconds = format.Ptr(updateFrequency + updateFrequency/10)

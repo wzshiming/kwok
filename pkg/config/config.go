@@ -431,6 +431,19 @@ func Unmarshal(raw []byte) (InternalObject, error) {
 	return iobj[0], nil
 }
 
+// UnmarshalWithType unmarshals the given raw message into the internal object.
+func UnmarshalWithType[T InternalObject](raw []byte) (t T, err error) {
+	obj, err := Unmarshal(raw)
+	if err != nil {
+		return t, err
+	}
+	tobj, ok := obj.(T)
+	if !ok {
+		return t, fmt.Errorf("failed to convert %T to %T", obj, tobj)
+	}
+	return tobj, nil
+}
+
 // Marshal marshals the given internal object into a raw message.
 func Marshal(obj InternalObject) ([]byte, error) {
 	typ := reflect.TypeOf(obj)

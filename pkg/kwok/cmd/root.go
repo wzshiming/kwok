@@ -149,6 +149,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		}
 
 		if len(podStages) == 0 {
+			logger.Warn("No pod stages found, using default pod stages")
 			podStages, err = getDefaultPodStages()
 			if err != nil {
 				return err
@@ -386,46 +387,24 @@ func waitForReady(ctx context.Context, clientset kubernetes.Interface) error {
 }
 
 func getDefaultNodeStages(heartbeat bool) ([]*internalversion.Stage, error) {
-	nodeStages := []*internalversion.Stage{}
-	nodeInit, err := config.Unmarshal([]byte(nodefast.DefaultNodeInit))
-	if err != nil {
-		return nil, err
+	nodeStages := [][]byte{
+		[]byte(nodefast.DefaultNodeInit),
 	}
-	nodeInitStage, ok := nodeInit.(*internalversion.Stage)
-	if !ok {
-		return nil, fmt.Errorf("failed to convert node init to stage")
-	}
-	nodeStages = append(nodeStages, nodeInitStage)
-
 	if heartbeat {
-		nodeHeartbeat, err := config.Unmarshal([]byte(nodeheartbeat.DefaultNodeHeartbeat))
-		if err != nil {
-			return nil, err
-		}
-		nodeHeartbeatStage, ok := nodeHeartbeat.(*internalversion.Stage)
-		if !ok {
-			return nil, fmt.Errorf("failed to convert node init to stage")
-		}
-		nodeStages = append(nodeStages, nodeHeartbeatStage)
+		nodeStages = append(nodeStages,
+			[]byte(nodeheartbeat.DefaultNodeHeartbeat),
+		)
 	}
-	return nodeStages, nil
+
+	return slices.MapWithError(nodeStages, config.UnmarshalWithType[*internalversion.Stage])
 }
 
 func getDefaultPodStages() ([]*internalversion.Stage, error) {
-	return slices.MapWithError([]string{
-		podfast.DefaultPodReady,
-		podfast.DefaultPodComplete,
-		podfast.DefaultPodDelete,
-	}, func(s string) (*internalversion.Stage, error) {
-		iobj, err := config.Unmarshal([]byte(s))
-		if err != nil {
-			return nil, err
-		}
-		stage, ok := iobj.(*internalversion.Stage)
-		if !ok {
-			return nil, fmt.Errorf("failed to convert pod init to stage")
-		}
+	podStages := [][]byte{
+		[]byte(podfast.DefaultPodReady),
+		[]byte(podfast.DefaultPodComplete),
+		[]byte(podfast.DefaultPodDelete),
+	}
 
-		return stage, nil
-	})
+	return slices.MapWithError(podStages, config.UnmarshalWithType[*internalversion.Stage])
 }

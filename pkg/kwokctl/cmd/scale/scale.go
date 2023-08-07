@@ -109,13 +109,9 @@ func runE(ctx context.Context, flags *flagpole, args []string) error {
 		}
 
 		logger.Info("No resource found, use default resource", "resource", resourceKind)
-		iobj, err := config.Unmarshal(resourceData)
+		krc, err = config.UnmarshalWithType[*internalversion.KwokctlResource](resourceData)
 		if err != nil {
 			return err
-		}
-		krc, ok = iobj.(*internalversion.KwokctlResource)
-		if !ok {
-			return fmt.Errorf("resource %T is not a kwokctl resource", iobj)
 		}
 	}
 
