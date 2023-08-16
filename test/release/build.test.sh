@@ -19,7 +19,7 @@ DIR="$(realpath "${DIR}")"
 
 ROOT_DIR="$(realpath "${DIR}/../..")"
 
-VERSION="$("${ROOT_DIR}/hack/get-version.sh")"
+VERSION="$(git describe --tags --dirty --always)"
 
 GOOS="$(go env GOOS)"
 GOARCH="$(go env GOARCH)"

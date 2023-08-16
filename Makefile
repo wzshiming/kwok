@@ -21,7 +21,7 @@ BUCKET ?=
 
 GH_RELEASE ?=
 
-VERSION ?= $(shell ./hack/get-version.sh)
+VERSION ?= $(shell git describe --tags --dirty --always)
 
 BASE_REF ?= $(shell git rev-parse --abbrev-ref HEAD)
 

@@ -12,17 +12,26 @@ steps:
       - BASE_REF=$_PULL_BASE_REF
       - PUSH=true
       - BUCKET=gs://k8s-staging-kwok
-      - STAGING=true
-      - STAGING_IMAGE_PREFIX=gcr.io/k8s-staging-kwok
-      - IMAGE_PREFIX=registry.k8s.io/kwok
       - NUMBER_SUPPORTED_KUBE_RELEASES=6
       - PRE_RELEASE=GA
     args:
       - -c
       - |
         gcloud auth configure-docker && \
-        docker buildx create --name img-builder --use && \
-        make release
+        docker buildx create --name img-builder --use
+
+        # The value passed by gcr's cloudbuild will have this prefix by default
+        # https://github.com/kubernetes/k8s.io/blob/aa5a1f164aece8f116196c40ac7b937be479cd41/images/codesearch/cs-fetch-repos/Makefile#L19
+        if [[ "${GIT_TAG}" =~ ^v[0-9]{8}- ]]; then
+          IMAGE_PREFIX=gcr.io/k8s-staging-kwok \
+          BINARY_PREFIX=https://storage.googleapis.com/k8s-staging-kwok/releases \
+          make release
+        else
+          STAGING=true \
+          STAGING_IMAGE_PREFIX=gcr.io/k8s-staging-kwok \
+          IMAGE_PREFIX=registry.k8s.io/kwok \
+          make release
+        fi
 
 substitutions:
   # _GIT_TAG will be filled with a git-based tag for the image, of the form vYYYYMMDD-hash, and

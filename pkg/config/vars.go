@@ -326,12 +326,12 @@ func setKwokctlKubernetesConfig(conf *configv1alpha1.KwokctlConfigurationOptions
 
 func setKwokctlKwokConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 	if conf.KwokBinaryPrefix == "" {
-		conf.KwokBinaryPrefix = consts.BinaryPrefix + "/" + conf.KwokVersion
+		conf.KwokBinaryPrefix = consts.BinaryPrefix + "/" + kwokGoogleStoragePrefix(consts.BinaryPrefix, conf.KwokVersion, "bin", GOOS, GOARCH)
 	}
 	conf.KwokBinaryPrefix = envs.GetEnvWithPrefix("BINARY_PREFIX", conf.KwokBinaryPrefix)
 
 	if conf.KwokControllerBinary == "" {
-		conf.KwokControllerBinary = conf.KwokBinaryPrefix + "/kwok-" + GOOS + "-" + GOARCH + conf.BinSuffix
+		conf.KwokControllerBinary = conf.KwokBinaryPrefix + "/" + kwokGithubReleaseSuffix(conf.KwokBinaryPrefix, "kwok", GOOS, GOARCH) + conf.BinSuffix
 	}
 	conf.KwokControllerBinary = envs.GetEnvWithPrefix("CONTROLLER_BINARY", conf.KwokControllerBinary)
 
@@ -554,4 +554,18 @@ func archAlias(arch string) string {
 		return v
 	}
 	return arch
+}
+
+func kwokGithubReleaseSuffix(prefix, name string, opts ...string) string {
+	if len(opts) != 0 && strings.HasPrefix(prefix, "https://github.com/") {
+		return strings.Join(append([]string{name}, opts...), "-")
+	}
+	return name
+}
+
+func kwokGoogleStoragePrefix(prefix, version string, opts ...string) string {
+	if len(opts) != 0 && strings.HasPrefix(prefix, "https://storage.googleapis.com/") {
+		return strings.Join(append([]string{version}, opts...), "/")
+	}
+	return version
 }
