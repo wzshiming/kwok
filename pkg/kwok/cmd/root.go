@@ -46,6 +46,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
+	"sigs.k8s.io/kwok/pkg/client/clientset/versioned"
 )
 
 type flagpole struct {
@@ -222,13 +223,19 @@ func runE(ctx context.Context, flags *flagpole) error {
 		return err
 	}
 
-	typedClient, err := clientset.ToTypedClient()
+	restConfig, err := clientset.ToRESTConfig()
 	if err != nil {
 		return err
 	}
-	typedKwokClient, err := clientset.ToTypedKwokClient()
+
+	typedClient, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not get Kubernetes typedClient: %w", err)
+	}
+
+	typedKwokClient, err := versioned.NewForConfig(restConfig)
+	if err != nil {
+		return fmt.Errorf("could not get kwok typedClient: %w", err)
 	}
 
 	switch {
