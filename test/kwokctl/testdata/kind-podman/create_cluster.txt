@@ -9,12 +9,12 @@ cat <<EOF ><ROOT_DIR>/workdir/clusters/<CLUSTER_NAME>/kind.yaml
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 networking:
-  apiServerPort: 32766
+  apiServerPort: 32765
 nodes:
 - role: control-plane
   extraPortMappings:
   - containerPort: 2379
-    hostPort: 32765
+    hostPort: 32764
     protocol: TCP
   kubeadmConfigPatches:
   - |
