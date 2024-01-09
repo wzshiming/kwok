@@ -44,6 +44,7 @@ var (
 	baseArgs    = []string{
 		"--kwok-controller-image=" + testImage,
 		"--runtime=" + runtimeEnv,
+		"--wait=30m",
 	}
 )
 
