@@ -356,7 +356,8 @@ func (c *StageController) patchResource(ctx context.Context, resource *unstructu
 	if ns := resource.GetNamespace(); ns != "" {
 		cli = nri.Namespace(ns)
 	}
-	result, err := cli.Patch(ctx, resource.GetName(), types.MergePatchType, patch, metav1.PatchOptions{}, "status")
+	// Test KubeVirt VMI
+	result, err := cli.Patch(ctx, resource.GetName(), types.MergePatchType, patch, metav1.PatchOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Warn("Patch resource",
