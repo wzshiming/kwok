@@ -22,18 +22,21 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/google/cel-go/common/types"
 	"k8s.io/apimachinery/pkg/labels"
 
+	"github.com/google/cel-go/common/types"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+	"sigs.k8s.io/kwok/pkg/utils/cel"
 	"sigs.k8s.io/kwok/pkg/utils/expression"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 )
 
 // NewLifecycle returns a new Lifecycle.
-func NewLifecycle(stages []*internalversion.Stage) (Lifecycle, error) {
+func NewLifecycle(stages []*internalversion.Stage, env *cel.Environment) (Lifecycle, error) {
 	lcs := Lifecycle{}
 	for _, stage := range stages {
-		lc, err := NewLifecycleStage(stage)
+		lc, err := NewLifecycleStage(stage, env)
 		if err != nil {
 			return nil, fmt.Errorf("lifecycle stage: %w", err)
 		}
@@ -48,10 +51,10 @@ func NewLifecycle(stages []*internalversion.Stage) (Lifecycle, error) {
 // Lifecycle is a list of lifecycle stage.
 type Lifecycle []*LifecycleStage
 
-func (s Lifecycle) match(label, annotation labels.Set, data interface{}) ([]*LifecycleStage, error) {
+func (s Lifecycle) match(label, annotation labels.Set, data, jsonStandard any) ([]*LifecycleStage, error) {
 	out := []*LifecycleStage{}
 	for _, stage := range s {
-		ok, err := stage.match(label, annotation, data)
+		ok, err := stage.match(label, annotation, data, jsonStandard)
 		if err != nil {
 			return nil, err
 		}
@@ -63,12 +66,8 @@ func (s Lifecycle) match(label, annotation labels.Set, data interface{}) ([]*Lif
 }
 
 // Match returns matched stage.
-func (s Lifecycle) Match(label, annotation labels.Set, data interface{}) (*LifecycleStage, error) {
-	data, err := expression.ToJSONStandard(data)
-	if err != nil {
-		return nil, err
-	}
-	stages, err := s.match(label, annotation, data)
+func (s Lifecycle) Match(label, annotation labels.Set, data, jsonStandard any) (*LifecycleStage, error) {
+	stages, err := s.match(label, annotation, data, jsonStandard)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +101,7 @@ func (s Lifecycle) Match(label, annotation labels.Set, data interface{}) (*Lifec
 }
 
 // NewLifecycleStage returns a new LifecycleStage.
-func NewLifecycleStage(s *internalversion.Stage) (*LifecycleStage, error) {
+func NewLifecycleStage(s *internalversion.Stage, env *cel.Environment) (*LifecycleStage, error) {
 	stage := &LifecycleStage{
 		name: s.Name,
 	}
@@ -124,6 +123,15 @@ func NewLifecycleStage(s *internalversion.Stage) (*LifecycleStage, error) {
 				return nil, err
 			}
 			stage.matchExpressions = append(stage.matchExpressions, requirement)
+		}
+	}
+	if selector.MatchConditions != nil {
+		for _, express := range selector.MatchConditions {
+			program, err := env.Compile(express.Expression)
+			if err != nil {
+				return nil, err
+			}
+			stage.matchConditions = append(stage.matchConditions, program)
 		}
 	}
 
@@ -177,6 +185,7 @@ type LifecycleStage struct {
 	matchLabels      labels.Selector
 	matchAnnotations labels.Selector
 	matchExpressions []*expression.Requirement
+	matchConditions  []cel.Program
 
 	weight int
 	next   *internalversion.StageNext
@@ -187,7 +196,7 @@ type LifecycleStage struct {
 	immediateNextStage bool
 }
 
-func (s *LifecycleStage) match(label, annotation labels.Set, jsonStandard interface{}) (bool, error) {
+func (s *LifecycleStage) match(label, annotation labels.Set, data, jsonStandard any) (bool, error) {
 	if s.matchLabels != nil {
 		if !s.matchLabels.Matches(label) {
 			return false, nil
@@ -210,6 +219,19 @@ func (s *LifecycleStage) match(label, annotation labels.Set, jsonStandard interf
 			}
 		}
 	}
+
+	if s.matchConditions != nil {
+		for _, program := range s.matchConditions {
+			val, _, err := program.Eval(data)
+			if err != nil {
+				return false, err
+			}
+			if !val.(types.Bool) {
+				return false, nil
+			}
+		}
+	}
+
 	return true, nil
 }
 
