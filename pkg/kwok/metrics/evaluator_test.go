@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cel
+package metrics
 
 import (
 	"testing"
@@ -35,7 +35,7 @@ func TestNodeEvaluation(t *testing.T) {
 	}
 	exp := "( Now().UnixSecond() - node.metadata.creationTimestamp.UnixSecond() ) * node.StartedContainersTotal() / 10.0"
 
-	env, err := NewEnvironment(NodeEvaluatorConfig{
+	env, err := NewEnvironment(EnvironmentConfig{
 		Now: func() time.Time {
 			return now
 		},
@@ -93,7 +93,7 @@ func TestResourceEvaluation(t *testing.T) {
 
 	exp := `( Quantity("10m") + Quantity(pod.metadata.annotations["cpu_usage"]) + node.status.allocatable["cpu"] + pod.spec.containers[0].resources.requests["cpu"] ) * 1.5 * 10`
 
-	env, err := NewEnvironment(NodeEvaluatorConfig{})
+	env, err := NewEnvironment(EnvironmentConfig{})
 	if err != nil {
 		t.Fatalf("failed to instantiate node Evaluator: %v", err)
 	}

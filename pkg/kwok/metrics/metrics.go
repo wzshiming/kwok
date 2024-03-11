@@ -28,7 +28,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
-	"sigs.k8s.io/kwok/pkg/kwok/metrics/cel"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/maps"
@@ -37,7 +36,7 @@ import (
 // UpdateHandler handles updating metrics on request
 type UpdateHandler struct {
 	dataSource      DataSource
-	environment     *cel.Environment
+	environment     *Environment
 	nodeCacheGetter informer.Getter[*corev1.Node]
 	podCacheGetter  informer.Getter[*corev1.Pod]
 
@@ -57,7 +56,7 @@ type DataSource interface {
 // UpdateHandlerConfig is configuration for a single node
 type UpdateHandlerConfig struct {
 	DataSource      DataSource
-	Environment     *cel.Environment
+	Environment     *Environment
 	NodeCacheGetter informer.Getter[*corev1.Node]
 	PodCacheGetter  informer.Getter[*corev1.Pod]
 }
@@ -80,7 +79,7 @@ func NewMetricsUpdateHandler(conf UpdateHandlerConfig) *UpdateHandler {
 	return h
 }
 
-func (h *UpdateHandler) getOrRegisterGauge(metricConfig *internalversion.MetricConfig, data cel.Data) (Gauge, string, error) {
+func (h *UpdateHandler) getOrRegisterGauge(metricConfig *internalversion.MetricConfig, data Data) (Gauge, string, error) {
 	key, labels, err := h.createKeyAndLabels(metricConfig, data)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to evaluate labels: %w", err)
@@ -105,7 +104,7 @@ func (h *UpdateHandler) getOrRegisterGauge(metricConfig *internalversion.MetricC
 	return val, key, nil
 }
 
-func (h *UpdateHandler) getOrRegisterCounter(metricConfig *internalversion.MetricConfig, data cel.Data) (Counter, string, error) {
+func (h *UpdateHandler) getOrRegisterCounter(metricConfig *internalversion.MetricConfig, data Data) (Counter, string, error) {
 	key, labels, err := h.createKeyAndLabels(metricConfig, data)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to evaluate labels: %w", err)
@@ -131,7 +130,7 @@ func (h *UpdateHandler) getOrRegisterCounter(metricConfig *internalversion.Metri
 	return val, key, nil
 }
 
-func (h *UpdateHandler) getOrRegisterHistogram(metricConfig *internalversion.MetricConfig, data cel.Data) (Histogram, string, error) {
+func (h *UpdateHandler) getOrRegisterHistogram(metricConfig *internalversion.MetricConfig, data Data) (Histogram, string, error) {
 	key, labels, err := h.createKeyAndLabels(metricConfig, data)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to evaluate labels: %w", err)
@@ -179,7 +178,7 @@ func (h *UpdateHandler) updateGauge(ctx context.Context, metricConfig *internalv
 		logger.Warn("node not found")
 		return nil, nil
 	}
-	data := cel.Data{
+	data := Data{
 		Node: node,
 	}
 
@@ -273,7 +272,7 @@ func (h *UpdateHandler) updateCounter(ctx context.Context, metricConfig *interna
 		logger.Warn("node not found")
 		return nil, nil
 	}
-	data := cel.Data{
+	data := Data{
 		Node: node,
 	}
 
@@ -362,7 +361,7 @@ func (h *UpdateHandler) updateHistogram(ctx context.Context, metricConfig *inter
 		logger.Warn("node not found")
 		return nil, nil
 	}
-	data := cel.Data{
+	data := Data{
 		Node: node,
 	}
 
@@ -478,7 +477,7 @@ func (h *UpdateHandler) updateMetric(ctx context.Context, metricConfig *internal
 // createKeyAndLabels creates a key and labels for a metric.
 // The key is used to unregister the metric.
 // The labels are used to set a value to the metric.
-func (h *UpdateHandler) createKeyAndLabels(metricConfig *internalversion.MetricConfig, data cel.Data) (string, prometheus.Labels, error) {
+func (h *UpdateHandler) createKeyAndLabels(metricConfig *internalversion.MetricConfig, data Data) (string, prometheus.Labels, error) {
 	if len(metricConfig.Labels) == 0 {
 		return uniqueKey(metricConfig.Name, metricConfig.Kind, nil), nil, nil
 	}
