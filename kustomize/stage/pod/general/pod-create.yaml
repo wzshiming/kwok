@@ -28,6 +28,10 @@ spec:
       {{ $now := Now }}
 
       conditions:
+      - lastProbeTime: null
+        lastTransitionTime: {{ $now | Quote }}
+        status: "True"
+        type: PodReadyToStartContainers
       {{ if .spec.initContainers }}
       - lastProbeTime: null
         lastTransitionTime: {{ $now | Quote }}

@@ -22,6 +22,9 @@ spec:
           image: fake
         - name: init-1
           image: fake
+        - name: sidecar-0
+          image: fake
+          restartPolicy: Always
       containers:
         - name: container-0
           image: fake

@@ -37,6 +37,12 @@ spec:
         name: {{ $item.name | Quote }}
         ready: true
         restartCount: 0
+        {{ if eq .restartPolicy "Always" }}
+        started: true
+        state:
+          running:
+            startedAt: {{ $now | Quote }}
+        {{ else }}
         started: false
         state:
           terminated:
@@ -44,6 +50,7 @@ spec:
             finishedAt: {{ $now | Quote }}
             reason: Completed
             startedAt: {{ $now | Quote }}
+        {{ end }}
       {{ end }}
       containerStatuses:
       {{ range .spec.containers }}
