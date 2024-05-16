@@ -52,6 +52,14 @@ type Cluster struct {
 	canNerdctlUnlessStopped *bool
 }
 
+// NewDockerCluster creates a new Runtime for docker.
+func NewDockerCluster(name, workdir string) (runtime.Runtime, error) {
+	return &Cluster{
+		Cluster: runtime.NewCluster(name, workdir),
+		runtime: consts.RuntimeTypeDocker,
+	}, nil
+}
+
 // NewPodmanCluster creates a new Runtime for podman.
 func NewPodmanCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
@@ -68,11 +76,19 @@ func NewNerdctlCluster(name, workdir string) (runtime.Runtime, error) {
 	}, nil
 }
 
-// NewDockerCluster creates a new Runtime for docker.
-func NewDockerCluster(name, workdir string) (runtime.Runtime, error) {
+// NewLimaCluster creates a new Runtime for lima.
+func NewLimaCluster(name, workdir string) (runtime.Runtime, error) {
 	return &Cluster{
 		Cluster: runtime.NewCluster(name, workdir),
-		runtime: consts.RuntimeTypeDocker,
+		runtime: consts.RuntimeTypeNerdctl + "." + consts.RuntimeTypeLima,
+	}, nil
+}
+
+// NewFinchCluster creates a new Runtime for finch.
+func NewFinchCluster(name, workdir string) (runtime.Runtime, error) {
+	return &Cluster{
+		Cluster: runtime.NewCluster(name, workdir),
+		runtime: consts.RuntimeTypeFinch,
 	}, nil
 }
 
