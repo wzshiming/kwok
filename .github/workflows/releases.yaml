@@ -72,7 +72,7 @@ jobs:
     - name: Release helm chart
       uses: helm/chart-releaser-action@v1.6.0
       with:
-        packages_with_index: true
+        packages_with_index: false
         mark_as_latest: false
         pages_branch: "gh-pages"
         charts_dir: "charts"
