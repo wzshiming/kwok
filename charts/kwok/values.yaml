@@ -1,0 +1,17 @@
+image:
+  pullPolicy: IfNotPresent
+  repository: registry.k8s.io/kwok/kwok
+  tag: v0.6.0
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "kwok-controller"
+
+podSecurityContext: {}
+securityContext: {}
+
+resources: {}
+
+affinity: {}
+
+nodeSelector: {}
