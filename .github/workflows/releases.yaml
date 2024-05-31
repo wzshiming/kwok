@@ -60,3 +60,10 @@ jobs:
       run: |
         REF=${{ github.ref }}
         GIT_TAG="${REF##*/}" make cross-cluster-image
+
+    - name: Install Helm
+      uses: azure/setup-helm@v4
+    - name: Release helm chart
+      uses: helm/chart-releaser-action@v1.6.0
+      env:
+        CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
