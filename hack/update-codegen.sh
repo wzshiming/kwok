@@ -49,6 +49,7 @@ function gen() {
     ./pkg/apis/v1alpha1/ \
     ./pkg/apis/config/v1alpha1/ \
     ./pkg/apis/action/v1alpha1/ \
+    ./pkg/apis/operator/v1alpha1/ \
     --output-file zz_generated.deepcopy.go \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt
   echo "Generating defaulter"
@@ -56,6 +57,7 @@ function gen() {
     ./pkg/apis/v1alpha1/ \
     ./pkg/apis/config/v1alpha1/ \
     ./pkg/apis/action/v1alpha1/ \
+    ./pkg/apis/operator/v1alpha1/ \
     --output-file zz_generated.defaults.go \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt
   echo "Generating conversion"
@@ -74,6 +76,14 @@ function gen() {
     --output-dir ./pkg/client/clientset \
     --go-header-file ./hack/boilerplate/boilerplate.generatego.txt \
     --plural-exceptions="Logs:Logs,ClusterLogs:ClusterLogs"
+
+  client-gen \
+    --clientset-name versioned \
+    --input-base "" \
+    --input sigs.k8s.io/kwok/pkg/apis/operator/v1alpha1 \
+    --output-pkg sigs.k8s.io/kwok/pkg/client/operator/clientset \
+    --output-dir ./pkg/client/operator/clientset \
+    --go-header-file ./hack/boilerplate/boilerplate.generatego.txt
 }
 
 cd "${ROOT_DIR}" && gen

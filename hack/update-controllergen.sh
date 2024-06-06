@@ -36,6 +36,13 @@ function gen() {
     paths=./pkg/apis/v1alpha1/ \
     output:crd:artifacts:config=kustomize/crd/bases \
     output:rbac:artifacts:config=kustomize/rbac
+
+  controller-gen \
+    rbac:roleName=kwok-controller \
+    crd:allowDangerousTypes=true \
+    paths=./pkg/apis/operator/v1alpha1/ \
+    output:crd:artifacts:config=kustomize/operator/crd/bases \
+    output:rbac:artifacts:config=kustomize/operator/rbac
 }
 
 cd "${ROOT_DIR}" && gen

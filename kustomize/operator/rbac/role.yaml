@@ -1,0 +1,33 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kwok-controller
+rules:
+- apiGroups:
+  - apps.k8s.io
+  resources:
+  - deployments
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - Kwoks
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+- apiGroups:
+  - kwok.x-k8s.io
+  resources:
+  - Kwoks/status
+  verbs:
+  - patch
+  - update
