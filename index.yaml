@@ -1,0 +1,25 @@
+apiVersion: v1
+entries:
+  kwok:
+  - apiVersion: v2
+    appVersion: 0.5.2
+    created: "2024-06-27T11:24:18.60421161Z"
+    description: KWOK (Kubernetes WithOut Kubelet)
+    digest: 3a6b96483337ed6933858927c5469692170e5483548afe7e732ff4a23a44eb1d
+    name: kwok
+    type: application
+    urls:
+    - https://github.com/wzshiming/kwok/releases/download/kwok-helm-chart-0.0.1/kwok-0.0.1.tgz
+    version: 0.0.1
+  stage-fast:
+  - apiVersion: v2
+    appVersion: 0.5.2
+    created: "2024-06-27T11:24:18.736448014Z"
+    description: Default stage policy of KWOK (Kubernetes WithOut Kubelet)
+    digest: 73814da1f0d4096c4912c56906dfe0d8ffe5c4d4e851b5ef5b10b267da6bc14d
+    name: stage-fast
+    type: application
+    urls:
+    - https://github.com/wzshiming/kwok/releases/download/stage-fast-helm-chart-0.0.1/stage-fast-0.0.1.tgz
+    version: 0.0.1
+generated: "2024-06-27T11:24:18.736452141Z"
