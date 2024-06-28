@@ -67,13 +67,13 @@ spec:
       {{ $kwokVersion := printf "kwok-%s" Version }}
       nodeInfo:
         architecture: {{ or $nodeInfo.architecture "amd64" }}
-        bootID: {{ or $nodeInfo.bootID `""` }}
+        bootID: {{ or $nodeInfo.bootID "\"\"" }}
         containerRuntimeVersion: {{ or $nodeInfo.containerRuntimeVersion $kwokVersion }}
         kernelVersion: {{ or $nodeInfo.kernelVersion $kwokVersion }}
         kubeProxyVersion: {{ or $nodeInfo.kubeProxyVersion $kwokVersion }}
         kubeletVersion: {{ or $nodeInfo.kubeletVersion $kwokVersion }}
-        machineID: {{ or $nodeInfo.machineID `""` }}
+        machineID: {{ or $nodeInfo.machineID "\"\"" }}
         operatingSystem: {{ or $nodeInfo.operatingSystem "linux" }}
-        osImage: {{ or $nodeInfo.osImage `""` }}
-        systemUUID: {{ or $nodeInfo.systemUUID `""` }}
+        osImage: {{ or $nodeInfo.osImage "\"\"" }}
+        systemUUID: {{ or $nodeInfo.systemUUID "\"\"" }}
       phase: Running
