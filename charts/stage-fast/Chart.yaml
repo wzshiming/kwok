@@ -11,5 +11,5 @@ keywords:
 sources:
 - https://github.com/kubernetes-sigs/kwok
 name: stage-fast
-appVersion: v0.5.2
+appVersion: v0.6.0-alpha.1
 version: 0.0.1
