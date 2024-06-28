@@ -59,6 +59,11 @@ function package_and_index() {
   chart_name="$(yq eval '.name' "${chart_dir}/Chart.yaml")"
   chart_verison="$(yq eval '.version' "${chart_dir}/Chart.yaml")"
   chart_app_verison="$(yq eval '.appVersion' "${chart_dir}/Chart.yaml")"
+
+  if yq eval ".entries.${chart_name}.[] | select(.version == \"${chart_verison}\")" "${index_dir}/index.yaml">/dev/null; then
+    echo "Version ${chart_verison} already exists"
+    return 0
+  fi
   local guass_name="${index_dir}/${chart_name}-${chart_verison}.tgz"
   if [[ -f "${guass_name}" ]]; then
     echo "File ${guass_name} already exists"
