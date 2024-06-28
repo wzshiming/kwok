@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: v0.5.2
+appVersion: v0.6.0-alpha.1
 annotations:
   kwok.x-k8s.io/version: "0.5.2"
 description: Default stage policy of KWOK (Kubernetes WithOut Kubelet)
