@@ -21,3 +21,5 @@
 *.sublime-project
 *.sublime-workspace
 *~
+
+*.tgz
