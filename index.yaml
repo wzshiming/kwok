@@ -49,6 +49,26 @@ entries:
   - annotations:
       kwok.x-k8s.io/version: 0.5.2
     apiVersion: v2
+    created: "2024-06-28T05:20:15.387674371Z"
+    description: Default stage policy of KWOK (Kubernetes WithOut Kubelet)
+    digest: c91930f28003528cc9f2c3722898bfd4f01d18cce210fc678a56d212e95ccca3
+    home: https://kwok.sigs.k8s.io
+    icon: https://github.com/kubernetes-sigs/kwok/raw/main/logo/kwok.png
+    keywords:
+    - kubernetes
+    - kwok
+    - kwok policy
+    - simulation
+    name: stage-fast
+    sources:
+    - https://github.com/kubernetes-sigs/kwok
+    type: application
+    urls:
+    - https://github.com/wzshiming/kwok/releases/download/stage-fast-helm-chart-0.0.3/stage-fast-0.0.3.tgz
+    version: 0.0.3
+  - annotations:
+      kwok.x-k8s.io/version: 0.5.2
+    apiVersion: v2
     created: "2024-06-27T12:49:00.574833692Z"
     description: Default stage policy of KWOK (Kubernetes WithOut Kubelet)
     digest: 74a19e811ca00addc122b630e2992454cd44a590f1d90cb702760465f7b5576c
@@ -74,4 +94,4 @@ entries:
     urls:
     - https://github.com/wzshiming/kwok/releases/download/stage-fast-helm-chart-0.0.1/stage-fast-0.0.1.tgz
     version: 0.0.1
-generated: "2024-06-28T04:10:33.807485125Z"
+generated: "2024-06-28T05:20:15.387700791Z"
