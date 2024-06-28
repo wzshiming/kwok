@@ -75,14 +75,10 @@ function package_and_index() {
   if [[ "${chart_alias}" != "" ]]; then
     local tmp_file="${index_dir}/${chart_alias}-${chart_verison}.tgz"
     mv "${guass_name}" "${tmp_file}"
-    if ! update_index "${index_dir}" "${chart_app_verison}" "${tmp_file}"; then
-      mv "${tmp_file}" "${guass_name}"
-      exit 1
-    fi
-    mv "${tmp_file}" "${guass_name}"
-  else
-    update_index "${index_dir}" "${chart_app_verison}" "${guass_name}"
+    guass_name="${tmp_file}"
   fi
+
+  update_index "${index_dir}" "${chart_app_verison}" "${guass_name}"
 }
 
 chart_dir="./charts"
