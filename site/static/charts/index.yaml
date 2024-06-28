@@ -1,2 +1,41 @@
 apiVersion: v1
-entries: {}
+entries:
+  kwok:
+  - apiVersion: v2
+    appVersion: v0.6.0-alpha.1
+    created: "2024-06-28T10:54:44.903621383Z"
+    description: KWOK (Kubernetes WithOut Kubelet)
+    digest: 386abb1d50c62d5c431ba820453691c72ae7f423e4c4d396191aa1e6af415e86
+    home: https://kwok.sigs.k8s.io
+    icon: https://github.com/kubernetes-sigs/kwok/raw/main/logo/kwok.png
+    keywords:
+    - kubernetes
+    - kwok
+    name: kwok
+    sources:
+    - https://github.com/kubernetes-sigs/kwok
+    type: application
+    urls:
+    - https://github.com/wzshiming/kwok/releases/download/v0.6.0-alpha.1/kwok-chart-0.0.1.tgz
+    version: 0.0.1
+  stage-fast:
+  - apiVersion: v2
+    appVersion: v0.6.0-alpha.1
+    created: "2024-06-28T10:54:44.903813973Z"
+    description: Default stage policy of KWOK (Kubernetes WithOut Kubelet)
+    digest: a01eec1bb52d307fd9d1078f4dfb88e99393f6b9641b987b46446c2519d383ff
+    home: https://kwok.sigs.k8s.io
+    icon: https://github.com/kubernetes-sigs/kwok/raw/main/logo/kwok.png
+    keywords:
+    - kubernetes
+    - kwok
+    - kwok policy
+    - simulation
+    name: stage-fast
+    sources:
+    - https://github.com/kubernetes-sigs/kwok
+    type: application
+    urls:
+    - https://github.com/wzshiming/kwok/releases/download/v0.6.0-alpha.1/kwok-stage-fast-chart-0.0.1.tgz
+    version: 0.0.1
+generated: "2024-06-28T10:54:44.902868787Z"
