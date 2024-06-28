@@ -2,9 +2,15 @@ name: Releases Charts
 
 on:
   push:
-    tags:
-    - 'kwok-chart-v*'
-    - 'kwok-stage-fast-chart-v*'
+    branches:
+    - release-*'
+    - main
+    paths:
+    - charts/kwok/Chart.yaml
+    - charts/stage-fast/Chart.yaml
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   releases:
@@ -17,44 +23,28 @@ jobs:
     - name: Set version
       run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
-    - name: Create charts tmp directory
-      run: |
-        mkdir .tmp-charts
-        if [[ "${RELEASE_VERSION}" == "kwok-chart-v"* ]]; then
-          version="$(cat ./charts/kwok/Chart.yaml | grep 'version: ' | awk '{ print $2}')"
-          if [[ "${RELEASE_VERSION}" != "kwok-chart-v${version}" ]]; then
-            echo "Chart version ${version} not same to tag ${RELEASE_VERSION}"
-            exit 1
-          fi
-          cp -a charts/kwok .tmp-charts/kwok
-        fi
-        if [[ "${RELEASE_VERSION}" == "kwok-stage-fast-chart-v"* ]]; then
-          version="$(cat ./charts/stage-fast/Chart.yaml | grep 'version: ' | awk '{ print $2}')"
-          if [[ "${RELEASE_VERSION}" != "kwok-stage-fast-chart-v${version}" ]]; then
-            echo "Chart version ${version} not same to tag ${RELEASE_VERSION}"
-            exit 1
-          fi
-          cp -a charts/stage-fast .tmp-charts/stage-fast
-        fi
-
     - name: Install Helm
       uses: azure/setup-helm@v4
 
-    - name: Set up Git user
-      run: |
-        git config user.name "$GITHUB_ACTOR"
-        git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-    - name: Release charts
-      uses: helm/chart-releaser-action@v1.6.0
-      env:
-        CR_CHARTS_DIR: ".tmp-charts"
-        CR_RELEASE_NAME_TEMPLATE: "${{ env.RELEASE_VERSION }}"
-        CR_MAKE_RELEASE_LATEST: false
-        CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload blob and build index
+      run:
+        ./hack/releases-helm-charts.sh
 
-    - name: Login to ghcr.io
-      run: |
-        helm registry login --username ${GITHUB_ACTOR} --password ${{ secrets.GITHUB_TOKEN }} ghcr.io
-    - name: Release Charts to GHCR
-      run: |
-        helm push "${{ env.RELEASE_VERSION }}.tgz" oci://ghcr.io/${{ github.repository }}/charts
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v6
+      with:
+        add-paths: |
+          site/static/charts/index.yaml
+        token: ${{ env.GH_TOKEN }}
+        commit-message: Bump charts
+        delete-branch: true
+        title: 'Bump charts'
+        body: |
+          Bump charts
+
+#    - name: Login to ghcr.io
+#      run: |
+#        helm registry login --username ${GITHUB_ACTOR} --password ${{ secrets.GITHUB_TOKEN }} ghcr.io
+#    - name: Release Charts to GHCR
+#      run: |
+#        helm push "${{ env.RELEASE_VERSION }}.tgz" oci://ghcr.io/${{ github.repository }}/charts
