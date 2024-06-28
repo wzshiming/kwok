@@ -10,4 +10,4 @@ keywords:
 sources:
 - https://github.com/kubernetes-sigs/kwok
 name: kwok
-version: 0.0.1
+version: 0.0.2

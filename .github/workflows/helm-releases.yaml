@@ -36,11 +36,11 @@ jobs:
         add-paths: |
           site/static/charts/index.yaml
         token: ${{ env.GH_TOKEN }}
-        commit-message: Bump charts
+        commit-message: Release charts
         delete-branch: true
-        title: 'Bump charts'
+        title: 'Release charts'
         body: |
-          Bump charts
+          Release charts
 
 #    - name: Login to ghcr.io
 #      run: |
