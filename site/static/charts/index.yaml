@@ -3,6 +3,26 @@ entries:
   kwok:
   - apiVersion: v2
     appVersion: v0.6.0-alpha.1
+    created: "2024-07-01T06:49:22.04856168Z"
+    description: KWOK (Kubernetes WithOut Kubelet)
+    digest: 47ceb8a243a26266d44fb2f88362210ebbb708d23e21d04c69a05f678204b355
+    home: https://kwok.sigs.k8s.io
+    icon: https://github.com/kubernetes-sigs/kwok/raw/main/logo/kwok.png
+    keywords:
+    - kubernetes
+    - kwok
+    maintainers:
+    - email: wzshiming@hotmail.com
+      name: wzshiming
+    name: kwok
+    sources:
+    - https://github.com/kubernetes-sigs/kwok
+    type: application
+    urls:
+    - https://github.com/wzshiming/kwok/releases/download/v0.6.0-alpha.1/kwok-chart-0.0.3.tgz
+    version: 0.0.3
+  - apiVersion: v2
+    appVersion: v0.6.0-alpha.1
     created: "2024-07-01T06:38:53.486543388Z"
     description: KWOK (Kubernetes WithOut Kubelet)
     digest: 3375b51001781f0d023b000be056391848822d02a83a9556a0df36373e187791
@@ -24,6 +44,27 @@ entries:
   stage-fast:
   - apiVersion: v2
     appVersion: v0.6.0-alpha.1
+    created: "2024-07-01T06:49:22.048884292Z"
+    description: Default stage policy of KWOK (Kubernetes WithOut Kubelet)
+    digest: 26a7903046571f3c6c420a7711adb6676281d4d28d98ea7c001306e82a91966e
+    home: https://kwok.sigs.k8s.io
+    icon: https://github.com/kubernetes-sigs/kwok/raw/main/logo/kwok.png
+    keywords:
+    - kubernetes
+    - kwok
+    - kwok stage policy
+    maintainers:
+    - email: wzshiming@hotmail.com
+      name: wzshiming
+    name: stage-fast
+    sources:
+    - https://github.com/kubernetes-sigs/kwok
+    type: application
+    urls:
+    - https://github.com/wzshiming/kwok/releases/download/v0.6.0-alpha.1/kwok-stage-fast-chart-0.0.3.tgz
+    version: 0.0.3
+  - apiVersion: v2
+    appVersion: v0.6.0-alpha.1
     created: "2024-07-01T06:38:53.486915125Z"
     description: Default stage policy of KWOK (Kubernetes WithOut Kubelet)
     digest: ee5765df2a7a9aa7f880b5556e49d960ebb8b2f255131011ddd2ce46c694888e
@@ -43,4 +84,4 @@ entries:
     urls:
     - https://github.com/wzshiming/kwok/releases/download/v0.6.0-alpha.1/kwok-stage-fast-chart-0.0.1.tgz
     version: 0.0.1
-generated: "2024-07-01T06:38:53.485525331Z"
+generated: "2024-07-01T06:49:22.047598672Z"
