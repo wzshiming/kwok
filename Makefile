@@ -255,15 +255,25 @@ help:
 
 .PRECIOUS: %.cast
 %.cast: %.demo
-	@WORK_DIR=$(shell dirname $<) \
-	./hack/democtl.sh "$<" "$@" \
-		--ps1='\033[1;96m~/sigs.k8s.io/kwok\033[1;94m$$\033[0m '
+	docker run --rm -it -v $$PWD:/kwok/ -w /kwok/ \
+		-v $$PWD/bin/linux/amd64/kwokctl:/usr/local/bin/kwokctl:ro \
+		--env "WORK_DIR=/kwok/$(shell dirname $<)" \
+		--env "ROOT_DIR=/kwok" \
+		--env "KWOK_WORKDIR=/kwok/workdir" \
+		ghcr.io/wzshiming/democtl:v0.0.3 \
+		"./$<" "./$@" \
+		--ps1='\033[1;96m~/sigs.k8s.io/kwok\033[1;94m$$\033[0m ' \
+		--env=WORK_DIR,ROOT_DIR
 
 .PRECIOUS: %.svg
 %.svg: %.cast
-	@./hack/democtl.sh "$<" "$@" \
+	docker run --rm -it -v $$PWD:/kwok/ -w /kwok/ \
+		ghcr.io/wzshiming/democtl:v0.0.3 \
+		"./$<" "./$@" \
 		--term xresources \
 	  	--profile ./.xresources
 
-%.mp4: %.cast
-	@./hack/democtl.sh "$<" "$@"
+%.mp4: %.svg
+	docker run --rm -it -v $$PWD:/kwok/ -w /kwok/ \
+		ghcr.io/wzshiming/democtl:v0.0.3 \
+		"./$<" "./$@"
