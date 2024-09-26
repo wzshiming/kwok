@@ -36,6 +36,8 @@ type KwokConfiguration struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Options holds information about the default value.
 	Options KwokConfigurationOptions `json:"options,omitempty"`
+
+	Tracing TracingConfiguration `json:"tracing,omitempty"`
 }
 
 // KwokConfigurationOptions holds information about the options.
@@ -146,4 +148,18 @@ type KwokConfigurationOptions struct {
 	// NodeLeaseParallelism is the number of NodeLeases that are allowed to be processed in parallel.
 	// +default=4
 	NodeLeaseParallelism uint `json:"nodeLeaseParallelism,omitempty"`
+}
+
+// TracingConfiguration provides versioned configuration for OpenTelemetry tracing clients.
+type TracingConfiguration struct {
+	// Endpoint of the collector this component will report traces to.
+	// The connection is insecure, and does not currently support TLS.
+	// +optional
+	Endpoint *string `json:"endpoint,omitempty"`
+
+	// SamplingRatePerMillion is the number of samples to collect per million spans.
+	// Recommended is unset. If unset, sampler respects its parent span's sampling
+	// rate, but otherwise never samples.
+	// +optional
+	SamplingRatePerMillion *int32 `json:"samplingRatePerMillion,omitempty"`
 }
