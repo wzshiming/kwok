@@ -109,7 +109,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	filters, errs := client.MappingForResources(restMapper, flags.Filters)
 	if len(errs) > 0 {
 		for _, err := range errs {
-			logger.Error("failed to get mapping", err)
+			logger.ErrorContext(ctx, "failed to get mapping", "err", err)
 		}
 	}
 

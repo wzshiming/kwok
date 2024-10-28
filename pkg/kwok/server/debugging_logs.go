@@ -52,6 +52,7 @@ func (s *Server) GetContainerLogs(ctx context.Context, podName, podNamespace, co
 
 // getContainerLogs handles containerLogs request against the Kubelet
 func (s *Server) getContainerLogs(request *restful.Request, response *restful.Response) {
+	ctx := request.Request.Context()
 	podNamespace := request.PathParameter("podNamespace")
 	podName := request.PathParameter("podID")
 	containerName := request.PathParameter("containerName")
@@ -83,8 +84,8 @@ func (s *Server) getContainerLogs(request *restful.Request, response *restful.Re
 	logOptions := &corev1.PodLogOptions{}
 	err := convert_url_Values_To_v1_PodLogOptions(&query, logOptions, nil)
 	if err != nil {
-		logger := log.FromContext(request.Request.Context())
-		logger.Error("Unable to decode the request for container logs", err)
+		logger := log.FromContext(ctx)
+		logger.ErrorContext(ctx, "Unable to decode the request for container logs", "err", err)
 		_ = response.WriteError(http.StatusBadRequest, fmt.Errorf(`{"message": "Unable to decode query."}`))
 		return
 	}
@@ -95,7 +96,7 @@ func (s *Server) getContainerLogs(request *restful.Request, response *restful.Re
 	}
 	fw := flushwriter.Wrap(response.ResponseWriter)
 	response.Header().Set("Transfer-Encoding", "chunked")
-	if err := s.GetContainerLogs(request.Request.Context(), podName, podNamespace, containerName, logOptions, fw, fw); err != nil {
+	if err := s.GetContainerLogs(ctx, podName, podNamespace, containerName, logOptions, fw, fw); err != nil {
 		_ = response.WriteError(http.StatusBadRequest, err)
 		return
 	}

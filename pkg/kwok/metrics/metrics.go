@@ -532,7 +532,7 @@ func (h *UpdateHandler) Update(ctx context.Context, nodeName string, metrics []i
 		metricName := metric.Name
 		keys, err := h.updateMetric(ctx, &metric, nodeName)
 		if err != nil {
-			logger.Error("failed to update metrics", err,
+			logger.ErrorContext(ctx, "failed to update metrics", "err", err,
 				"metric", metricName,
 				"node", nodeName,
 			)

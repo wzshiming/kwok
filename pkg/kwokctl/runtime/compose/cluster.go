@@ -1123,22 +1123,22 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 		logPath := path.Join(componentsDir, component.Name+".log")
 		f, err := c.OpenFile(logPath)
 		if err != nil {
-			logger.Error("Failed to open file", err)
+			logger.ErrorContext(ctx, "Failed to open file", "err", err)
 			continue
 		}
 		if err = c.Logs(ctx, component.Name, f); err != nil {
-			logger.Error("Failed to get log", err)
+			logger.ErrorContext(ctx, "Failed to get log", "err", err)
 			if err = f.Close(); err != nil {
-				logger.Error("Failed to close file", err)
+				logger.ErrorContext(ctx, "Failed to close file", "err", err)
 				if err = c.Remove(logPath); err != nil {
-					logger.Error("Failed to remove file", err)
+					logger.ErrorContext(ctx, "Failed to remove file", "err", err)
 				}
 			}
 		}
 		if err = f.Close(); err != nil {
-			logger.Error("Failed to close file", err)
+			logger.ErrorContext(ctx, "Failed to close file", "err", err)
 			if err = c.Remove(logPath); err != nil {
-				logger.Error("Failed to remove file", err)
+				logger.ErrorContext(ctx, "Failed to remove file", "err", err)
 			}
 		}
 	}
@@ -1147,15 +1147,15 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 		filePath := path.Join(componentsDir, "audit.log")
 		f, err := c.OpenFile(filePath)
 		if err != nil {
-			logger.Error("Failed to open file", err)
+			logger.ErrorContext(ctx, "Failed to open file", "err", err)
 		} else {
 			if err = c.AuditLogs(ctx, f); err != nil {
-				logger.Error("Failed to get audit log", err)
+				logger.ErrorContext(ctx, "Failed to get audit log", "err", err)
 			}
 			if err = f.Close(); err != nil {
-				logger.Error("Failed to close file", err)
+				logger.ErrorContext(ctx, "Failed to close file", "err", err)
 				if err = c.Remove(filePath); err != nil {
-					logger.Error("Failed to remove file", err)
+					logger.ErrorContext(ctx, "Failed to remove file", "err", err)
 				}
 			}
 		}

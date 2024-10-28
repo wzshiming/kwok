@@ -250,7 +250,7 @@ func (c *NodeController) preprocessWorker(ctx context.Context) {
 		case node := <-c.preprocessChan:
 			err := c.preprocess(ctx, node)
 			if err != nil {
-				logger.Error("Failed to preprocess node", err,
+				logger.ErrorContext(ctx, "Failed to preprocess node", "err", err,
 					"node", node.Name,
 				)
 			}
@@ -330,7 +330,7 @@ func (c *NodeController) playStageWorker(ctx context.Context) {
 		c.delayQueueMapping.Delete(node.Key)
 		needRetry, err := c.playStage(ctx, node.Resource, node.Stage)
 		if err != nil {
-			logger.Error("failed to apply stage", err,
+			logger.ErrorContext(ctx, "failed to apply stage", "err", err,
 				"node", node.Key,
 				"stage", node.Stage.Name(),
 			)

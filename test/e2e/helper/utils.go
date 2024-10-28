@@ -233,13 +233,13 @@ func WaitForAllNodesReady() env.Func {
 		err = wait.For(
 			func(ctx context.Context) (done bool, err error) {
 				if err = client.List(ctx, &list); err != nil {
-					logger.Error("failed to list nodes", err)
+					logger.ErrorContext(ctx, "failed to list nodes", "err", err)
 					return false, nil
 				}
 
 				metaList, err := meta.ExtractList(&list)
 				if err != nil {
-					logger.Error("failed to extract list", err)
+					logger.ErrorContext(ctx, "failed to extract list", "err", err)
 					return false, nil
 				}
 				if len(metaList) == 0 {
@@ -289,13 +289,13 @@ func WaitForAllPodsReady() env.Func {
 		err = wait.For(
 			func(ctx context.Context) (done bool, err error) {
 				if err = client.List(ctx, &list); err != nil {
-					logger.Error("failed to list pods", err)
+					logger.ErrorContext(ctx, "failed to list pods", "err", err)
 					return false, nil
 				}
 
 				metaList, err := meta.ExtractList(&list)
 				if err != nil {
-					logger.Error("failed to extract list", err)
+					logger.ErrorContext(ctx, "failed to extract list", "err", err)
 					return false, nil
 				}
 				if len(metaList) == 0 {
@@ -344,7 +344,7 @@ func waitForServiceAccountReady(ctx context.Context, resource *resources.Resourc
 				return true, nil
 			}
 			if !apierrors.IsNotFound(err) {
-				logger.Error("failed to get service account", err)
+				logger.ErrorContext(ctx, "failed to get service account", "err", err)
 				return false, nil
 			}
 
@@ -361,7 +361,7 @@ func waitForServiceAccountReady(ctx context.Context, resource *resources.Resourc
 				return false, nil
 			}
 
-			logger.Error("failed to create service account", err)
+			logger.ErrorContext(ctx, "failed to create service account", "err", err)
 			return false, nil
 		},
 		wait.WithContext(ctx),
@@ -378,7 +378,7 @@ func Environment() env.Environment {
 	logger := log.NewLogger(os.Stderr, log.LevelDebug)
 	cfg, err := envconf.NewFromFlags()
 	if err != nil {
-		logger.Error("failed to create config", err)
+		logger.ErrorContext(ctx, "failed to create config", "err", err)
 		os.Exit(1)
 	}
 
@@ -387,7 +387,7 @@ func Environment() env.Environment {
 
 	testEnv, err := env.NewWithContext(ctx, cfg)
 	if err != nil {
-		logger.Error("failed to create environment", err)
+		logger.ErrorContext(ctx, "failed to create environment", "err", err)
 		os.Exit(1)
 	}
 

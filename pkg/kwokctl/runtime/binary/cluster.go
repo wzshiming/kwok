@@ -1043,7 +1043,7 @@ func (c *Cluster) Logs(ctx context.Context, name string, out io.Writer) error {
 	defer func() {
 		err = f.Close()
 		if err != nil {
-			logger.Error("Failed to close file", err)
+			logger.ErrorContext(ctx, "Failed to close file", "err", err)
 		}
 	}()
 
@@ -1076,7 +1076,7 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 	defer func() {
 		err = t.Stop()
 		if err != nil {
-			logger.Error("Failed to stop tail file", err)
+			logger.ErrorContext(ctx, "Failed to stop tail file", "err", err)
 		}
 	}()
 
@@ -1084,7 +1084,7 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 		for line := range t.Lines {
 			_, err = out.Write([]byte(line.Text + "\n"))
 			if err != nil {
-				logger.Error("Failed to write line text", err)
+				logger.ErrorContext(ctx, "Failed to write line text", "err", err)
 			}
 		}
 	}()
@@ -1139,14 +1139,14 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 		src := c.GetLogPath(component.Name + ".log")
 		dest := path.Join(componentsDir, component.Name+".log")
 		if err = c.CopyFile(src, dest); err != nil {
-			logger.Error("Failed to copy file", err)
+			logger.ErrorContext(ctx, "Failed to copy file", "err", err)
 		}
 	}
 	if conf.Options.KubeAuditPolicy != "" {
 		src := c.GetLogPath(runtime.AuditLogName)
 		dest := path.Join(componentsDir, runtime.AuditLogName)
 		if err = c.CopyFile(src, dest); err != nil {
-			logger.Error("Failed to copy file", err)
+			logger.ErrorContext(ctx, "Failed to copy file", "err", err)
 		}
 	}
 

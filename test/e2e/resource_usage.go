@@ -74,7 +74,7 @@ func CaseResourceUsage(kwokctlPath, clusterName string) *features.FeatureBuilder
 					out := bytes.NewBuffer(nil)
 					_, err = exec.Command(exec.WithAllWriteTo(ctx, out), kwokctlPath, "--name", clusterName, "kubectl", "top", "pod")
 					if err != nil {
-						logger.Error("kubectl top pod", err)
+						logger.ErrorContext(ctx, "kubectl top pod", "err", err)
 						return false, nil
 					}
 
@@ -124,7 +124,7 @@ func CaseResourceUsage(kwokctlPath, clusterName string) *features.FeatureBuilder
 					out := bytes.NewBuffer(nil)
 					_, err = exec.Command(exec.WithAllWriteTo(ctx, out), kwokctlPath, "--name", clusterName, "kubectl", "top", "pod")
 					if err != nil {
-						logger.Error("kubectl top pod", err)
+						logger.ErrorContext(ctx, "kubectl top pod", "err", err)
 						return false, nil
 					}
 

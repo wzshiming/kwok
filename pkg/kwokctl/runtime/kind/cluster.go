@@ -983,7 +983,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		defer func() {
 			err := c.StopComponent(ctx, consts.ComponentKubeScheduler)
 			if err != nil {
-				logger.Error("Failed to disable kube-scheduler", err)
+				logger.ErrorContext(ctx, "Failed to disable kube-scheduler", "err", err)
 			}
 		}()
 	}
@@ -992,7 +992,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		defer func() {
 			err := c.StopComponent(ctx, consts.ComponentKubeControllerManager)
 			if err != nil {
-				logger.Error("Failed to disable kube-controller-manager", err)
+				logger.ErrorContext(ctx, "Failed to disable kube-controller-manager", "err", err)
 			}
 		}()
 	}
@@ -1068,12 +1068,12 @@ func (c *Cluster) Up(ctx context.Context) error {
 	// Cordoning the node to prevent fake pods from being scheduled on it
 	err = c.Kubectl(ctx, "cordon", c.getClusterName())
 	if err != nil {
-		logger.Error("Failed cordon node", err)
+		logger.ErrorContext(ctx, "Failed cordon node", "err", err)
 	}
 
 	err = c.Exec(ctx, c.runtime, "exec", c.getClusterName(), "chmod", "-R", "+r", "/etc/kubernetes/pki")
 	if err != nil {
-		logger.Error("Failed to chmod pki", err)
+		logger.ErrorContext(ctx, "Failed to chmod pki", "err", err)
 	}
 
 	return nil
@@ -1243,7 +1243,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 	logger := log.FromContext(ctx)
 	err = c.Exec(exec.WithAllWriteToErrOut(c.withProviderEnv(ctx)), kindPath, "delete", "cluster", "--name", c.Name())
 	if err != nil {
-		logger.Error("Failed to delete cluster", err)
+		logger.ErrorContext(ctx, "Failed to delete cluster", "err", err)
 	}
 
 	return nil
@@ -1498,22 +1498,22 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 		logPath := path.Join(componentsDir, component.Name+".log")
 		f, err := c.OpenFile(logPath)
 		if err != nil {
-			logger.Error("Failed to open file", err)
+			logger.ErrorContext(ctx, "Failed to open file", "err", err)
 			continue
 		}
 		if err = c.Logs(ctx, component.Name, f); err != nil {
-			logger.Error("Failed to get log", err)
+			logger.ErrorContext(ctx, "Failed to get log", "err", err)
 			if err = f.Close(); err != nil {
-				logger.Error("Failed to close file", err)
+				logger.ErrorContext(ctx, "Failed to close file", "err", err)
 				if err = c.Remove(logPath); err != nil {
-					logger.Error("Failed to remove file", err)
+					logger.ErrorContext(ctx, "Failed to remove file", "err", err)
 				}
 			}
 		}
 		if err = f.Close(); err != nil {
-			logger.Error("Failed to close file", err)
+			logger.ErrorContext(ctx, "Failed to close file", "err", err)
 			if err = c.Remove(logPath); err != nil {
-				logger.Error("Failed to remove file", err)
+				logger.ErrorContext(ctx, "Failed to remove file", "err", err)
 			}
 		}
 	}
@@ -1522,15 +1522,15 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 		filePath := path.Join(componentsDir, "audit.log")
 		f, err := c.OpenFile(filePath)
 		if err != nil {
-			logger.Error("Failed to open file", err)
+			logger.ErrorContext(ctx, "Failed to open file", "err", err)
 		} else {
 			if err = c.AuditLogs(ctx, f); err != nil {
-				logger.Error("Failed to get audit log", err)
+				logger.ErrorContext(ctx, "Failed to get audit log", "err", err)
 			}
 			if err = f.Close(); err != nil {
-				logger.Error("Failed to close file", err)
+				logger.ErrorContext(ctx, "Failed to close file", "err", err)
 				if err = c.Remove(filePath); err != nil {
-					logger.Error("Failed to remove file", err)
+					logger.ErrorContext(ctx, "Failed to remove file", "err", err)
 				}
 			}
 		}

@@ -104,7 +104,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 	for _, component := range components {
 		err = rt.StopComponent(ctx, component.Name)
 		if err != nil {
-			logger.Error("Failed to stop component", err,
+			logger.ErrorContext(ctx, "Failed to stop component", "err", err,
 				"component", component.Name,
 			)
 		}
@@ -114,7 +114,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		for _, component := range components {
 			err = rt.StartComponent(ctx, component.Name)
 			if err != nil {
-				logger.Error("Failed to start component", err,
+				logger.ErrorContext(ctx, "Failed to start component", "err", err,
 					"component", component.Name,
 				)
 			}

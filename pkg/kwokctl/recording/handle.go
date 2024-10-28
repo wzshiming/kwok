@@ -50,7 +50,7 @@ func (h *Handle) Input(ctx context.Context) {
 	for ctx.Err() == nil {
 		r, _, err := getch.Getch()
 		if err != nil {
-			logger.Error("Failed to get key", err)
+			logger.ErrorContext(ctx, "Failed to get key", "err", err)
 			return
 		}
 		switch r {

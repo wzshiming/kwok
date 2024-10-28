@@ -45,7 +45,7 @@ func (c *Cluster) SnapshotSave(ctx context.Context, path string) error {
 	defer func() {
 		err = c.Exec(ctx, c.runtime, "exec", "-i", kindName, "rm", "-f", tmpFile)
 		if err != nil {
-			logger.Error("Failed to clean snapshot", err)
+			logger.ErrorContext(ctx, "Failed to clean snapshot", "err", err)
 		}
 	}()
 
@@ -70,24 +70,24 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	for _, component := range components {
 		err := c.StopComponent(ctx, component)
 		if err != nil {
-			logger.Error("Failed to stop", err, "component", component)
+			logger.ErrorContext(ctx, "Failed to stop", "err", err, "component", component)
 		}
 	}
 	defer func() {
 		for _, component := range components {
 			err := c.StartComponent(ctx, component)
 			if err != nil {
-				logger.Error("Failed to start", err, "component", component)
+				logger.ErrorContext(ctx, "Failed to start", "err", err, "component", component)
 			}
 		}
 
 		err := c.Stop(ctx)
 		if err != nil {
-			logger.Error("Failed to stop", err)
+			logger.ErrorContext(ctx, "Failed to stop", "err", err)
 		}
 		err = c.Start(ctx)
 		if err != nil {
-			logger.Error("Failed to start", err)
+			logger.ErrorContext(ctx, "Failed to start", "err", err)
 		}
 	}()
 
@@ -100,7 +100,7 @@ func (c *Cluster) SnapshotRestore(ctx context.Context, path string) error {
 	defer func() {
 		err = c.RemoveAll(etcdDataTmp)
 		if err != nil {
-			logger.Error("Failed to clear etcd temporary data", err)
+			logger.ErrorContext(ctx, "Failed to clear etcd temporary data", "err", err)
 		}
 	}()
 
@@ -136,14 +136,14 @@ func (c *Cluster) SnapshotRestoreWithYAML(ctx context.Context, path string, conf
 			return err == nil, err
 		})
 		if err != nil {
-			logger.Error("Failed to stop", err, "component", component)
+			logger.ErrorContext(ctx, "Failed to stop", "err", err, "component", component)
 		}
 	}
 	defer func() {
 		for _, component := range components {
 			err := c.StartComponent(ctx, component)
 			if err != nil {
-				logger.Error("Failed to start", err, "component", component)
+				logger.ErrorContext(ctx, "Failed to start", "err", err, "component", component)
 			}
 		}
 	}()

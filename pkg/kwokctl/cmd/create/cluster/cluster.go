@@ -281,20 +281,20 @@ func runE(ctx context.Context, flags *flagpole) error {
 			subCtx := context.Background()
 			err := rt.Uninstall(subCtx)
 			if err != nil {
-				logger.Error("Failed to clean up cluster", err)
+				logger.ErrorContext(ctx, "Failed to clean up cluster", "err", err)
 			} else {
 				logger.Info("Cluster is cleaned up")
 			}
 		}
 		err = rt.SetConfig(ctx, flags.KwokctlConfiguration)
 		if err != nil {
-			logger.Error("Failed to set config", err)
+			logger.ErrorContext(ctx, "Failed to set config", "err", err)
 			cleanUp()
 			return err
 		}
 		err = rt.Save(ctx)
 		if err != nil {
-			logger.Error("Failed to save config", err)
+			logger.ErrorContext(ctx, "Failed to save config", "err", err)
 			cleanUp()
 			return err
 		}
@@ -304,7 +304,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		logger.Info("Cluster is creating")
 		err = rt.Install(ctx)
 		if err != nil {
-			logger.Error("Failed to setup config", err)
+			logger.ErrorContext(ctx, "Failed to setup config", "err", err)
 			cleanUp()
 			return err
 		}
@@ -317,7 +317,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		setContext := func() {
 			err = rt.AddContext(ctx, flags.Kubeconfig)
 			if err != nil {
-				logger.Error("Failed to add context to kubeconfig", err,
+				logger.ErrorContext(ctx, "Failed to add context to kubeconfig", "err", err,
 					"kubeconfig", flags.Kubeconfig,
 				)
 			} else {
@@ -365,7 +365,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		logger.Info("Waiting for cluster to be ready")
 		err = rt.WaitReady(gctx, flags.Wait)
 		if err != nil {
-			logger.Error("Failed to wait for cluster to be ready", err,
+			logger.ErrorContext(ctx, "Failed to wait for cluster to be ready", "err", err,
 				"elapsed", time.Since(start),
 			)
 		} else {

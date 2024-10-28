@@ -68,7 +68,7 @@ func CaseStage() *features.FeatureBuilder {
 				func(ctx context.Context) (done bool, err error) {
 					var item v1alpha1.Stage
 					if err = client.Get(ctx, s.Name, s.Namespace, &item); err != nil {
-						logger.Error("failed to list stage", err)
+						logger.ErrorContext(ctx, "failed to list stage", "err", err)
 						return false, nil
 					}
 

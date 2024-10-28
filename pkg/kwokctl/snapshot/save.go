@@ -130,7 +130,7 @@ func (s *Saver) Save(ctx context.Context, encoder *yaml.Encoder, tracks map[*met
 			err = retry.OnError(retry.DefaultBackoff, retriable, func() error {
 				l, err := nri.List(ctx, opts)
 				if err != nil {
-					logger.Error("failed to list resource", err)
+					logger.ErrorContext(ctx, "failed to list resource", "err", err)
 				} else {
 					list = l
 					latestResourceVersion = l.GetResourceVersion()

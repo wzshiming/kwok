@@ -165,7 +165,7 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 		if len(objs) == 0 {
 			err = ri.Delete(ctx, obj.GetName(), metav1.DeleteOptions{})
 			if err != nil {
-				logger.Error("Delete resource", err)
+				logger.ErrorContext(ctx, "Delete resource", "err", err)
 			}
 			return nil
 		}
@@ -176,7 +176,7 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 			// Delete the last object.
 			err = ri.Delete(ctx, obj.GetName(), metav1.DeleteOptions{})
 			if err != nil {
-				logger.Error("Delete resource", err)
+				logger.ErrorContext(ctx, "Delete resource", "err", err)
 			}
 			return nil
 		}
@@ -184,7 +184,7 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 		// Delete the end object.
 		err = ri.Delete(ctx, endObj.Name, metav1.DeleteOptions{})
 		if err != nil {
-			logger.Error("Delete resource", err)
+			logger.ErrorContext(ctx, "Delete resource", "err", err)
 		}
 
 		// Find the index of the new object to be inserted.
@@ -199,7 +199,7 @@ func Scale(ctx context.Context, clientset client.Clientset, conf Config) error {
 			// Delete the last object.
 			err = ri.Delete(ctx, obj.GetName(), metav1.DeleteOptions{})
 			if err != nil {
-				logger.Error("Delete resource", err)
+				logger.ErrorContext(ctx, "Delete resource", "err", err)
 			}
 			return nil
 		}

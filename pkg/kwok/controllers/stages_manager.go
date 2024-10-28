@@ -92,7 +92,7 @@ func (c *StagesManager) manage(ctx context.Context) {
 
 				lifecycleStage, err := lifecycle.NewStage(stage)
 				if err != nil {
-					logger.Error("failed to create lifecycle stage", err, "ref", ref)
+					logger.ErrorContext(ctx, "failed to create lifecycle stage", "err", err, "ref", ref)
 					return nil, false
 				}
 				return lifecycleStage, true
@@ -102,7 +102,7 @@ func (c *StagesManager) manage(ctx context.Context) {
 		cancelctx, cancel := context.WithCancelCause(ctx)
 		err := c.startFunc(cancelctx, ref, lifecycle)
 		if err != nil {
-			logger.Error("failed to start controller", err, "ref", ref)
+			logger.ErrorContext(ctx, "failed to start controller", "err", err, "ref", ref)
 			continue
 		}
 

@@ -133,7 +133,7 @@ func deleteCluster(ctx context.Context, clusterName string, kubeconfigPath strin
 	if kubeconfigPath != "" {
 		err = rt.RemoveContext(ctx, kubeconfigPath)
 		if err != nil {
-			logger.Error("Failed to remove context from kubeconfig", err,
+			logger.ErrorContext(ctx, "Failed to remove context from kubeconfig", "err", err,
 				"kubeconfig", kubeconfigPath,
 			)
 		}

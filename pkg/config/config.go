@@ -284,7 +284,7 @@ func Load(ctx context.Context, src ...string) ([]InternalObject, error) {
 	for _, raw := range raws {
 		err := json.Unmarshal(raw, &meta)
 		if err != nil {
-			logger.Error("Unsupported config", err,
+			logger.ErrorContext(ctx, "Unsupported config", "err", err,
 				"src", src,
 			)
 			continue

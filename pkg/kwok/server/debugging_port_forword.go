@@ -84,12 +84,13 @@ func (s *Server) PortForward(ctx context.Context, name string, uid types.UID, po
 // getPortForward handles a new restful port forward request. It determines the
 // pod name and uid and then calls ServePortForward.
 func (s *Server) getPortForward(req *restful.Request, resp *restful.Response) {
+	ctx := req.Request.Context()
 	params := getPortForwardRequestParams(req)
 
 	portForwardOptions, err := portforward.NewV4Options(req.Request)
 	if err != nil {
 		logger := log.FromContext(req.Request.Context())
-		logger.Error("NewV4Options", err)
+		logger.ErrorContext(ctx, "NewV4Options", "err", err)
 		_ = resp.WriteError(http.StatusBadRequest, err)
 		return
 	}

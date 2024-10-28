@@ -25,8 +25,9 @@ import (
 func (s *Server) healthzCheck(rw http.ResponseWriter, req *http.Request) {
 	_, err := rw.Write([]byte("ok"))
 	if err != nil {
-		logger := log.FromContext(req.Context())
-		logger.Error("Failed to write", err)
+		ctx := req.Context()
+		logger := log.FromContext(ctx)
+		logger.ErrorContext(ctx, "Failed to write", "err", err)
 	}
 }
 

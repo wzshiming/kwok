@@ -162,7 +162,7 @@ func (c *StageController) preprocessWorker(ctx context.Context) {
 		case resource := <-c.preprocessChan:
 			err := c.preprocess(ctx, resource)
 			if err != nil {
-				logger.Error("Failed to preprocess resource", err,
+				logger.ErrorContext(ctx, "Failed to preprocess resource", "err", err,
 					"resource", log.KObj(resource),
 				)
 			}
@@ -243,7 +243,7 @@ func (c *StageController) playStageWorker(ctx context.Context) {
 		c.delayQueueMapping.Delete(resource.Key)
 		needRetry, err := c.playStage(ctx, resource.Resource, resource.Stage)
 		if err != nil {
-			logger.Error("failed to apply stage", err,
+			logger.ErrorContext(ctx, "failed to apply stage", "err", err,
 				"resource", resource.Key,
 				"stage", resource.Stage.Name(),
 			)
@@ -352,7 +352,7 @@ func (c *StageController) patchResource(ctx context.Context, resource *unstructu
 
 		dc, err := c.impersonatingDynamicClient.Impersonate(rest.ImpersonationConfig{UserName: patch.Impersonation.Username})
 		if err != nil {
-			logger.Error("error getting impersonating client", err)
+			logger.ErrorContext(ctx, "error getting impersonating client", "err", err)
 			return nil, err
 		}
 		nri = dc.Resource(c.gvr)

@@ -440,7 +440,7 @@ func startServer(ctx context.Context, flags *flagpole, ctr *controllers.Controll
 				podIP := envs.GetEnv("POD_IP", "")
 				hostIP := envs.GetEnv("HOST_IP", "")
 				if podIP == "" || hostIP == "" || podIP != hostIP {
-					logger.Error("Failed to run server", err)
+					logger.ErrorContext(ctx, "Failed to run server", "err", err)
 					os.Exit(1)
 				} else {
 					logger.Warn("Failed to run server, but allow the server exit when work on host network", "err", err)
@@ -477,7 +477,7 @@ func waitForReady(ctx context.Context, clientset kubernetes.Interface) error {
 					Limit: 1,
 				})
 			if err != nil {
-				logger.Error("Failed to list nodes", err)
+				logger.ErrorContext(ctx, "Failed to list nodes", "err", err)
 				return false, nil
 			}
 			return true, nil

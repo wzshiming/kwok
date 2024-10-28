@@ -318,7 +318,7 @@ func (c *Controller) nodeLeaseSyncWorker(ctx context.Context) {
 				FieldSelector: fields.OneTermEqualSelector("metadata.name", nodeName).String(),
 			}, c.nodesChan)
 			if err != nil {
-				logger.Error("failed to update node", err, "node", nodeName)
+				logger.ErrorContext(ctx, "failed to update node", "err", err, "node", nodeName)
 			}
 			continue
 		}
@@ -373,7 +373,7 @@ func (c *Controller) initStagesManager(ctx context.Context) error {
 			return slices.FilterAndMap(objs, func(obj *v1alpha1.Stage) (*internalversion.Stage, bool) {
 				r, err := internalversion.ConvertToInternalStage(obj)
 				if err != nil {
-					logger.Error("failed to convert to internal stage", err, "obj", obj)
+					logger.ErrorContext(ctx, "failed to convert to internal stage", "err", err, "obj", obj)
 					return nil, false
 				}
 				return r, true
@@ -567,7 +567,7 @@ func (c *Controller) podsOnNodeSyncWorker(ctx context.Context) {
 			FieldSelector: fields.OneTermEqualSelector("spec.nodeName", nodeName).String(),
 		}, c.podsChan)
 		if err != nil {
-			logger.Error("failed to update pods on node", err, "node", nodeName)
+			logger.ErrorContext(ctx, "failed to update pods on node", "err", err, "node", nodeName)
 		}
 	}
 }

@@ -86,7 +86,7 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 			c.runtime == consts.RuntimeTypeFinch {
 			_, err := exec.Command(context.Background(), c.runtime, "rm", "--force", tempContainerName)
 			if err != nil {
-				logger.Error("Remove temporary port-forward container", err)
+				logger.ErrorContext(ctx, "Remove temporary port-forward container", "err", err)
 			}
 		}
 	}
@@ -119,7 +119,7 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 		for {
 			conn, err := listener.Accept()
 			if err != nil {
-				logger.Error("accepting connection", err)
+				logger.ErrorContext(ctx, "accepting connection", "err", err)
 				return
 			}
 

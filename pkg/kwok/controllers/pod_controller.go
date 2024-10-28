@@ -183,7 +183,7 @@ func (c *PodController) preprocessWorker(ctx context.Context) {
 		case pod := <-c.preprocessChan:
 			err := c.preprocess(ctx, pod)
 			if err != nil {
-				logger.Error("Failed to preprocess node", err,
+				logger.ErrorContext(ctx, "Failed to preprocess node", "err", err,
 					"pod", log.KObj(pod),
 					"node", pod.Spec.NodeName,
 				)
@@ -265,7 +265,7 @@ func (c *PodController) playStageWorker(ctx context.Context) {
 		c.delayQueueMapping.Delete(pod.Key)
 		needRetry, err := c.playStage(ctx, pod.Resource, pod.Stage)
 		if err != nil {
-			logger.Error("failed to apply stage", err,
+			logger.ErrorContext(ctx, "failed to apply stage", "err", err,
 				"pod", pod.Key,
 				"stage", pod.Stage.Name(),
 			)
@@ -517,7 +517,7 @@ func (c *PodController) recyclingPodIP(ctx context.Context, pod *corev1.Pod) {
 				}
 				pool, err := c.ipPool(cidr)
 				if err != nil {
-					logger.Error("Failed to get ip pool", err,
+					logger.ErrorContext(ctx, "Failed to get ip pool", "err", err,
 						"pod", log.KObj(pod),
 						"node", pod.Spec.NodeName,
 					)
@@ -529,7 +529,7 @@ func (c *PodController) recyclingPodIP(ctx context.Context, pod *corev1.Pod) {
 	} else {
 		err := cni.Remove(context.Background(), string(pod.UID), pod.Name, pod.Namespace)
 		if err != nil {
-			logger.Error("cni remove", err)
+			logger.ErrorContext(ctx, "cni remove", "err", err)
 		}
 	}
 }

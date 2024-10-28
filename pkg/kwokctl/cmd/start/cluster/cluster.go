@@ -94,7 +94,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		logger.Info("Waiting for cluster to be ready")
 		err = rt.WaitReady(gctx, flags.Wait)
 		if err != nil {
-			logger.Error("Failed to wait for cluster to be ready", err,
+			logger.ErrorContext(ctx, "Failed to wait for cluster to be ready", "err", err,
 				"elapsed", time.Since(start),
 			)
 		} else {

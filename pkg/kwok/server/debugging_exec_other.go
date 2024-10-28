@@ -57,7 +57,7 @@ func (s *Server) execInContainerWithTTY(ctx context.Context, cmd []string, in io
 		}{in, out}
 		err := utilsnet.Tunnel(ctx, pty, stm, buf1, buf2)
 		if err != nil {
-			logger.Error("failed to tunnel", err)
+			logger.ErrorContext(ctx, "failed to tunnel", "err", err)
 		}
 	}()
 
@@ -70,7 +70,7 @@ func (s *Server) execInContainerWithTTY(ctx context.Context, cmd []string, in io
 					Cols: size.Width,
 				})
 				if err != nil {
-					logger.Error("failed to resize pty", err)
+					logger.ErrorContext(ctx, "failed to resize pty", "err", err)
 				}
 			}
 		}()

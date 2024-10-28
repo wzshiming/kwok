@@ -106,7 +106,7 @@ func (s *Server) dynamicMetricsPath(ctx context.Context, ws *restful.WebService,
 			if _, ok := hasPaths[path]; ok {
 				err := ws.RemoveRoute(http.MethodGet, path)
 				if err != nil {
-					logger.Error("Failed to remove route", err, "path", path)
+					logger.ErrorContext(ctx, "Failed to remove route", "err", err, "path", path)
 				}
 			}
 			ws.Route(ws.GET(path).
@@ -117,7 +117,7 @@ func (s *Server) dynamicMetricsPath(ctx context.Context, ws *restful.WebService,
 			if _, ok := newHasPaths[path]; !ok {
 				err := ws.RemoveRoute(http.MethodGet, path)
 				if err != nil {
-					logger.Error("Failed to remove route", err, "path", path)
+					logger.ErrorContext(ctx, "Failed to remove route", "err", err, "path", path)
 				}
 			}
 		}

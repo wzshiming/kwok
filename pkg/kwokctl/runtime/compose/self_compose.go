@@ -239,7 +239,7 @@ func (c *Cluster) createComponent(ctx context.Context, componentName string) err
 		if c.isNerdctl {
 			canNerdctlUnlessStopped, err := c.isCanNerdctlUnlessStopped(ctx)
 			if err != nil {
-				logger.Error("Failed to check unless-stopped support", err)
+				logger.ErrorContext(ctx, "Failed to check unless-stopped support", "err", err)
 			}
 			if canNerdctlUnlessStopped {
 				args = append(args, "--restart=unless-stopped")

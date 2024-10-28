@@ -66,7 +66,7 @@ func (c *Cluster) PortForward(ctx context.Context, name string, portOrName strin
 		for {
 			conn, err := listener.Accept()
 			if err != nil {
-				logger.Error("accepting connection", err)
+				logger.ErrorContext(ctx, "accepting connection", "err", err)
 				return
 			}
 
