@@ -104,6 +104,7 @@ type Config struct {
 	DynamicClient                         dynamic.Interface
 	RESTClient                            rest.Interface
 	ImpersonatingDynamicClient            client.DynamicClientImpersonator
+	TypedNodesClient                      client.TypedNodesClient
 	RESTMapper                            meta.RESTMapper
 	TypedClient                           kubernetes.Interface
 	TypedKwokClient                       versioned.Interface
@@ -249,7 +250,7 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 	renewIntervalJitter := 0.04
 	c.nodeLeases, err = NewNodeLeaseController(NodeLeaseControllerConfig{
 		Clock:                c.conf.Clock,
-		TypedClient:          c.conf.TypedClient,
+		TypedNodesClient:     c.conf.TypedNodesClient,
 		LeaseDurationSeconds: c.conf.NodeLeaseDurationSeconds,
 		LeaseParallelism:     c.conf.NodeLeaseParallelism,
 		GetLease: func(nodeName string) (*coordinationv1.Lease, bool) {
@@ -417,7 +418,7 @@ func (c *Controller) onNodeUnmanaged(nodeName string) {
 func (c *Controller) initNodeController(ctx context.Context, lifecycle resources.Getter[lifecycle.Lifecycle]) (err error) {
 	c.nodes, err = NewNodeController(NodeControllerConfig{
 		Clock:                                 c.conf.Clock,
-		TypedClient:                           c.conf.TypedClient,
+		TypedNodesClient:                      c.conf.TypedNodesClient,
 		NodeIP:                                c.conf.NodeIP,
 		NodeName:                              c.conf.NodeName,
 		NodePort:                              c.conf.NodePort,
@@ -446,7 +447,7 @@ func (c *Controller) initPodController(ctx context.Context, lifecycle resources.
 	c.pods, err = NewPodController(PodControllerConfig{
 		Clock:                                 c.conf.Clock,
 		EnableCNI:                             c.conf.EnableCNI,
-		TypedClient:                           c.conf.TypedClient,
+		TypedNodesClient:                      c.conf.TypedNodesClient,
 		NodeCacheGetter:                       c.nodeCacheGetter,
 		NodeIP:                                c.conf.NodeIP,
 		CIDR:                                  c.conf.CIDR,

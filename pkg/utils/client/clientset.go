@@ -28,6 +28,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/util/flowcontrol"
+	"k8s.io/client-go/kubernetes"
 
 	"sigs.k8s.io/kwok/pkg/utils/version"
 )
@@ -40,6 +41,7 @@ type Clientset interface {
 	ToRESTMapper() (meta.RESTMapper, error)
 	ToDynamicClient() (dynamic.Interface, error)
 	ToImpersonatingDynamicClient() DynamicClientImpersonator
+	ToTypedNodesClient() TypedNodesClient
 }
 
 // clientset is a set of Kubernetes clients.
@@ -53,6 +55,7 @@ type clientset struct {
 	dynamicClient   dynamic.Interface
 
 	impersonationCache map[string]dynamic.Interface
+	nodeCache          map[string]*kubernetes.Clientset
 
 	opts []Option
 }
@@ -74,6 +77,7 @@ func NewClientset(masterURL, kubeconfigPath string, opts ...Option) (Clientset, 
 		kubeconfigPath:     kubeconfigPath,
 		opts:               opts,
 		impersonationCache: map[string]dynamic.Interface{},
+		nodeCache:          map[string]*kubernetes.Clientset{},
 	}, nil
 }
 
@@ -170,6 +174,11 @@ func (g *clientset) ToDynamicClient() (dynamic.Interface, error) {
 
 // ToImpersonatingDynamicClient returns a dynamic Kubernetes client.
 func (g *clientset) ToImpersonatingDynamicClient() DynamicClientImpersonator {
+	return g
+}
+
+// ToTypedNodesClient returns a typed nodes client
+func (g *clientset) ToTypedNodesClient() TypedNodesClient {
 	return g
 }
 

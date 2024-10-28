@@ -25,7 +25,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
 
@@ -39,6 +38,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
+	"sigs.k8s.io/kwok/pkg/utils/client"
 )
 
 var (
@@ -49,7 +49,7 @@ var (
 type PodController struct {
 	clock                                 clock.Clock
 	enableCNI                             bool
-	typedClient                           kubernetes.Interface
+	typedNodesClient                      client.TypedNodesClient
 	nodeCacheGetter                       informer.Getter[*corev1.Node]
 	disregardStatusWithAnnotationSelector labels.Selector
 	disregardStatusWithLabelSelector      labels.Selector
@@ -79,7 +79,7 @@ type PodInfo struct {
 type PodControllerConfig struct {
 	Clock                                 clock.Clock
 	EnableCNI                             bool
-	TypedClient                           kubernetes.Interface
+	TypedNodesClient                      client.TypedNodesClient
 	NodeCacheGetter                       informer.Getter[*corev1.Node]
 	DisregardStatusWithAnnotationSelector string
 	DisregardStatusWithLabelSelector      string
@@ -118,7 +118,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 	c := &PodController{
 		clock:                                 conf.Clock,
 		enableCNI:                             conf.EnableCNI,
-		typedClient:                           conf.TypedClient,
+		typedNodesClient:                      conf.TypedNodesClient,
 		nodeCacheGetter:                       conf.NodeCacheGetter,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
@@ -163,7 +163,12 @@ func (c *PodController) deleteResource(ctx context.Context, pod *corev1.Pod) err
 		"node", pod.Spec.NodeName,
 	)
 
-	err := c.typedClient.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, deleteOpt)
+	tc, err := c.typedNodesClient.Nodes(pod.Spec.NodeName)
+	if err != nil {
+		return err
+	}
+
+	err = tc.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, deleteOpt)
 	if err != nil {
 		return err
 	}
@@ -381,7 +386,13 @@ func (c *PodController) patchResource(ctx context.Context, pod *corev1.Pod, patc
 		)
 		subresource = []string{patch.Subresource}
 	}
-	result, err := c.typedClient.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, patch.Type, patch.Data, metav1.PatchOptions{}, subresource...)
+
+	tc, err := c.typedNodesClient.Nodes(pod.Spec.NodeName)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := tc.CoreV1().Pods(pod.Namespace).Patch(ctx, pod.Name, patch.Type, patch.Data, metav1.PatchOptions{}, subresource...)
 	if err != nil {
 		return nil, err
 	}

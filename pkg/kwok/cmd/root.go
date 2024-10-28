@@ -272,6 +272,7 @@ func runE(ctx context.Context, flags *flagpole) error {
 		RESTMapper:                            restMapper,
 		ImpersonatingDynamicClient:            impersonatingDynamicClient,
 		TypedClient:                           typedClient,
+		TypedNodesClient:                      clientset,
 		TypedKwokClient:                       typedKwokClient,
 		EnableCNI:                             flags.Options.EnableCNI,
 		EnableMetrics:                         enableMetrics,

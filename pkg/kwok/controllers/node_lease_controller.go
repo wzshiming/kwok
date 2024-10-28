@@ -25,7 +25,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/utils/clock"
 
 	"sigs.k8s.io/kwok/pkg/log"
@@ -33,11 +32,12 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
+	"sigs.k8s.io/kwok/pkg/utils/client"
 )
 
 // NodeLeaseController is responsible for creating and renewing a lease object
 type NodeLeaseController struct {
-	typedClient          clientset.Interface
+	typedNodesClient     client.TypedNodesClient
 	leaseDurationSeconds uint
 	leaseParallelism     uint
 	renewInterval        time.Duration
@@ -60,7 +60,7 @@ type NodeLeaseController struct {
 type NodeLeaseControllerConfig struct {
 	Clock                clock.Clock
 	HolderIdentity       string
-	TypedClient          clientset.Interface
+	TypedNodesClient     client.TypedNodesClient
 	LeaseDurationSeconds uint
 	LeaseParallelism     uint
 	GetLease             func(nodeName string) (*coordinationv1.Lease, bool)
@@ -82,7 +82,7 @@ func NewNodeLeaseController(conf NodeLeaseControllerConfig) (*NodeLeaseControlle
 
 	c := &NodeLeaseController{
 		clock:                conf.Clock,
-		typedClient:          conf.TypedClient,
+		typedNodesClient:     conf.TypedNodesClient,
 		leaseDurationSeconds: conf.LeaseDurationSeconds,
 		leaseParallelism:     conf.LeaseParallelism,
 		getLease:             conf.GetLease,
@@ -241,7 +241,12 @@ func (c *NodeLeaseController) ensureLease(ctx context.Context, leaseName string)
 		}
 	}
 
-	lease, err := c.typedClient.CoordinationV1().Leases(corev1.NamespaceNodeLease).Create(ctx, lease, metav1.CreateOptions{})
+	tc, err := c.typedNodesClient.Nodes(leaseName)
+	if err != nil {
+		return nil, err
+	}
+
+	lease, err = tc.CoordinationV1().Leases(corev1.NamespaceNodeLease).Create(ctx, lease, metav1.CreateOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +272,12 @@ func (c *NodeLeaseController) renewLease(ctx context.Context, base *coordination
 		}
 	}
 
-	lease, err := c.typedClient.CoordinationV1().Leases(lease.Namespace).Update(ctx, lease, metav1.UpdateOptions{})
+	tc, err := c.typedNodesClient.Nodes(lease.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	lease, err = tc.CoordinationV1().Leases(lease.Namespace).Update(ctx, lease, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, err
 	}

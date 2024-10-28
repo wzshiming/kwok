@@ -26,7 +26,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
 	netutils "k8s.io/utils/net"
@@ -40,12 +39,13 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/maps"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
+	"sigs.k8s.io/kwok/pkg/utils/client"
 )
 
 // NodeController is a fake nodes implementation that can be used to test
 type NodeController struct {
 	clock                                 clock.Clock
-	typedClient                           kubernetes.Interface
+	typedNodesClient                      client.TypedNodesClient
 	nodeIP                                string
 	nodeName                              string
 	nodePort                              int
@@ -69,7 +69,7 @@ type NodeController struct {
 // NodeControllerConfig is the configuration for the NodeController
 type NodeControllerConfig struct {
 	Clock                                 clock.Clock
-	TypedClient                           kubernetes.Interface
+	TypedNodesClient                      client.TypedNodesClient
 	OnNodeManagedFunc                     func(nodeName string)
 	OnNodeUnmanagedFunc                   func(nodeName string)
 	DisregardStatusWithAnnotationSelector string
@@ -112,7 +112,7 @@ func NewNodeController(conf NodeControllerConfig) (*NodeController, error) {
 
 	c := &NodeController{
 		clock:                                 conf.Clock,
-		typedClient:                           conf.TypedClient,
+		typedNodesClient:                      conf.TypedNodesClient,
 		disregardStatusWithAnnotationSelector: disregardStatusWithAnnotationSelector,
 		disregardStatusWithLabelSelector:      disregardStatusWithLabelSelector,
 		onNodeManagedFunc:                     conf.OnNodeManagedFunc,
@@ -230,7 +230,12 @@ func (c *NodeController) deleteResource(ctx context.Context, node *corev1.Node) 
 		"node", node.Name,
 	)
 
-	err := c.typedClient.CoreV1().Nodes().Delete(ctx, node.Name, deleteOpt)
+	tc, err := c.typedNodesClient.Nodes(node.Name)
+	if err != nil {
+		return err
+	}
+
+	err = tc.CoreV1().Nodes().Delete(ctx, node.Name, deleteOpt)
 	if err != nil {
 		return err
 	}
@@ -444,7 +449,13 @@ func (c *NodeController) patchResource(ctx context.Context, node *corev1.Node, p
 		)
 		subresource = []string{patch.Subresource}
 	}
-	result, err := c.typedClient.CoreV1().Nodes().Patch(ctx, node.Name, patch.Type, patch.Data, metav1.PatchOptions{}, subresource...)
+
+	tc, err := c.typedNodesClient.Nodes(node.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := tc.CoreV1().Nodes().Patch(ctx, node.Name, patch.Type, patch.Data, metav1.PatchOptions{}, subresource...)
 	if err != nil {
 		return nil, err
 	}
