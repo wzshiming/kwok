@@ -19,27 +19,63 @@ package hack
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"os"
+
+	"sigs.k8s.io/kwok/pkg/config"
+	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
+	"sigs.k8s.io/kwok/pkg/log"
+	"sigs.k8s.io/kwok/pkg/utils/exec"
+	"sigs.k8s.io/kwok/pkg/utils/path"
 
 	"github.com/spf13/cobra"
-
-	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/hack/del"
-	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/hack/get"
-	"sigs.k8s.io/kwok/pkg/kwokctl/cmd/hack/put"
 )
+
+type flagpole struct {
+	Name string
+}
 
 // NewCommand returns a new cobra.Command for get
 func NewCommand(ctx context.Context) *cobra.Command {
+	flags := &flagpole{}
+
 	cmd := &cobra.Command{
-		Args:  cobra.NoArgs,
 		Use:   "hack [command]",
-		Short: "[experimental] Hack [get, put, delete] resources in etcd without apiserver",
+		Short: "[experimental] Hack [get, put, del] resources in etcd without apiserver",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmd.Help()
+			flags.Name = config.DefaultCluster
+			err := runE(cmd.Context(), flags, args)
+			if err != nil {
+				return fmt.Errorf("%v: %w", args, err)
+			}
+			return nil
 		},
 	}
-	// add subcommands
-	cmd.AddCommand(get.NewCommand(ctx))
-	cmd.AddCommand(del.NewCommand(ctx))
-	cmd.AddCommand(put.NewCommand(ctx))
+	cmd.DisableFlagParsing = true
 	return cmd
+}
+
+func runE(ctx context.Context, flags *flagpole, args []string) error {
+	name := config.ClusterName(flags.Name)
+	workdir := path.Join(config.ClustersDir, flags.Name)
+
+	logger := log.FromContext(ctx)
+	logger = logger.With("cluster", flags.Name)
+	ctx = log.NewContext(ctx, logger)
+
+	rt, err := runtime.DefaultRegistry.Load(ctx, name, workdir)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			logger.Warn("Cluster does not exist")
+		}
+		return err
+	}
+
+	err = rt.KectlInCluster(exec.WithStdIO(ctx), args...)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -247,6 +247,8 @@ func setKwokctlConfigurationDefaults(config *configv1alpha1.KwokctlConfiguration
 
 	setMetricsServerConfig(conf)
 
+	setKwokctlKectlConfig(conf)
+
 	return config
 }
 
@@ -587,6 +589,18 @@ func setMetricsServerConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
 		conf.MetricsServerBinary = conf.MetricsServerBinaryPrefix + "/metrics-server-" + GOOS + "-" + GOARCH + conf.BinSuffix
 	}
 	conf.MetricsServerBinary = envs.GetEnvWithPrefix("METRICS_SERVER_BINARY", conf.MetricsServerBinary)
+}
+
+func setKwokctlKectlConfig(conf *configv1alpha1.KwokctlConfigurationOptions) {
+	if conf.KedctlVersion == "" {
+		conf.KedctlVersion = consts.KectlVersion
+	}
+
+	// https://github.com/wzshiming/kectl/releases/download/v0.0.2/kectl_darwin_amd64
+
+	if conf.KedctlBinary == "" {
+		conf.KedctlBinary = consts.KectlBinaryPrefix + "/" + conf.KedctlVersion + "/kectl" + GOOS + "_" + GOARCH
+	}
 }
 
 // joinImageURI joins the image URI.

@@ -97,6 +97,9 @@ type Runtime interface {
 	// EtcdctlInCluster command in cluster
 	EtcdctlInCluster(ctx context.Context, args ...string) error
 
+	// KectlInCluster command in cluster
+	KectlInCluster(ctx context.Context, args ...string) error
+
 	// Logs logs of a component
 	Logs(ctx context.Context, name string, out io.Writer) error
 

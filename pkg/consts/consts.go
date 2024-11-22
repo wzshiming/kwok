@@ -63,6 +63,9 @@ var (
 	MetricsServerBinaryPrefix = "https://github.com/kubernetes-sigs/metrics-server/releases/download"
 	MetricsServerImagePrefix  = "registry.k8s.io/metrics-server"
 
+	KectlVersion      = "0.0.2"
+	KectlBinaryPrefix = "https://github.com/wzshiming/kectl/releases/download"
+
 	DefaultUnlimitedQPS   = 5000.0
 	DefaultUnlimitedBurst = 10000
 )
