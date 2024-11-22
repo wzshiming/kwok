@@ -120,10 +120,10 @@ func scaleCreateNode(ctx context.Context, t *testing.T, kwokctlPath string, name
 func CaseBenchmark(kwokctlPath, clusterName string) *features.FeatureBuilder {
 	return features.New("Benchmark").
 		Assess("Create nodes", func(ctx context.Context, t *testing.T, c *envconf.Config) context.Context {
-			ctx0, cancel := context.WithTimeout(ctx, 120*time.Second)
+			ctx0, cancel := context.WithTimeout(ctx, 180*time.Second)
 			defer cancel()
 
-			err := scaleCreateNode(ctx0, t, kwokctlPath, clusterName, 2000)
+			err := scaleCreateNode(ctx0, t, kwokctlPath, clusterName, 5000)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -133,7 +133,7 @@ func CaseBenchmark(kwokctlPath, clusterName string) *features.FeatureBuilder {
 			ctx0, cancel := context.WithTimeout(ctx, 240*time.Second)
 			defer cancel()
 
-			err := scaleCreatePod(ctx0, t, kwokctlPath, clusterName, 5000)
+			err := scaleCreatePod(ctx0, t, kwokctlPath, clusterName, 10000)
 			if err != nil {
 				t.Fatal(err)
 			}

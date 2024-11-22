@@ -45,6 +45,7 @@ var (
 		"--runtime=" + runtimeEnv,
 		"--wait=15m",
 		"--disable-kube-scheduler",
+		"--disable-qps-limits",
 	}
 )
 
