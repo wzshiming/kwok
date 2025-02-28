@@ -277,6 +277,11 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 			c.nodeManageQueue.Add(nodeName)
 			c.podOnNodeManageQueue.Add(nodeName)
 		},
+		WaitFunc: func() {
+			for c.nodeManageQueue.Len() > 16 {
+				time.Sleep(100 * time.Millisecond)
+			}
+		},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create node leases controller: %w", err)
