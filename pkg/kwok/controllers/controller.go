@@ -559,6 +559,10 @@ func (c *Controller) Start(ctx context.Context) error {
 func (c *Controller) podsOnNodeSyncWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
+		for c.nodeManageQueue.Len() > c.podOnNodeManageQueue.Len() {
+			time.Sleep(time.Second)
+		}
+
 		nodeName, ok := c.podOnNodeManageQueue.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
