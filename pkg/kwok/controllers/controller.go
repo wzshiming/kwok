@@ -93,8 +93,8 @@ type Controller struct {
 
 	stageGetter resources.DynamicGetter[[]*internalversion.Stage]
 
-	podOnNodeManageQueue queue.Queue[string]
-	nodeManageQueue      queue.Queue[string]
+	podOnNodeManageQueue queue.DelayingQueue[string]
+	nodeManageQueue      queue.DelayingQueue[string]
 }
 
 // Config is the configuration for the controller
@@ -220,8 +220,8 @@ func (c *Controller) init(ctx context.Context) (err error) {
 
 	c.patchMeta = patch.NewPatchMetaFromOpenAPI3(c.conf.RESTClient)
 
-	c.podOnNodeManageQueue = queue.NewQueue[string]()
-	c.nodeManageQueue = queue.NewQueue[string]()
+	c.podOnNodeManageQueue = queue.NewDelayingQueue[string](c.conf.Clock)
+	c.nodeManageQueue = queue.NewDelayingQueue[string](c.conf.Clock)
 	return nil
 }
 
@@ -275,7 +275,12 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 		HolderIdentity: c.conf.ID,
 		OnNodeManagedFunc: func(nodeName string) {
 			c.nodeManageQueue.Add(nodeName)
-			c.podOnNodeManageQueue.Add(nodeName)
+			c.podOnNodeManageQueue.AddAfter(nodeName, time.Second)
+		},
+		WaitFunc: func() {
+			for c.nodeManageQueue.Len() > 16 {
+				time.Sleep(100 * time.Millisecond)
+			}
 		},
 	})
 	if err != nil {
@@ -305,7 +310,6 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 }
 
 func (c *Controller) nodeLeaseSyncWorker(ctx context.Context) {
-	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
 		nodeName, ok := c.nodeManageQueue.GetOrWaitWithDone(ctx.Done())
 		if !ok {
@@ -313,13 +317,7 @@ func (c *Controller) nodeLeaseSyncWorker(ctx context.Context) {
 		}
 		node, ok := c.nodeCacheGetter.Get(nodeName)
 		if !ok {
-			logger.Warn("node not found in cache", "node", nodeName)
-			err := c.nodesInformer.Sync(ctx, informer.Option{
-				FieldSelector: fields.OneTermEqualSelector("metadata.name", nodeName).String(),
-			}, c.nodesChan)
-			if err != nil {
-				logger.Error("failed to update node", err, "node", nodeName)
-			}
+			c.nodeManageQueue.AddAfter(nodeName, time.Second)
 			continue
 		}
 

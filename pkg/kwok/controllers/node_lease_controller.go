@@ -54,6 +54,7 @@ type NodeLeaseController struct {
 
 	holderIdentity    string
 	onNodeManagedFunc func(nodeName string)
+	waitFunc          func()
 }
 
 // NodeLeaseControllerConfig is the configuration for NodeLeaseController
@@ -68,6 +69,7 @@ type NodeLeaseControllerConfig struct {
 	RenewIntervalJitter  float64
 	MutateLeaseFunc      func(*coordinationv1.Lease) error
 	OnNodeManagedFunc    func(nodeName string)
+	WaitFunc             func()
 }
 
 // NewNodeLeaseController constructs and returns a NodeLeaseController
@@ -92,6 +94,7 @@ func NewNodeLeaseController(conf NodeLeaseControllerConfig) (*NodeLeaseControlle
 		delayQueue:           queue.NewWeightDelayingQueue[string](conf.Clock),
 		holderIdentity:       conf.HolderIdentity,
 		onNodeManagedFunc:    conf.OnNodeManagedFunc,
+		waitFunc:             conf.WaitFunc,
 	}
 
 	return c, nil
@@ -108,6 +111,9 @@ func (c *NodeLeaseController) Start(ctx context.Context) error {
 func (c *NodeLeaseController) syncWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
+		if c.waitFunc != nil {
+			c.waitFunc()
+		}
 		nodeName, ok := c.delayQueue.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
