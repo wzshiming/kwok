@@ -49,11 +49,13 @@ type NodeLeaseController struct {
 	// mutateLeaseFunc allows customizing a lease object
 	mutateLeaseFunc func(*coordinationv1.Lease) error
 
-	delayQueue   queue.WeightDelayingQueue[string]
-	holdLeaseSet maps.SyncMap[string, bool]
+	delayQueue         queue.WeightDelayingQueue[string]
+	holdLeaseSet       maps.SyncMap[string, bool]
+	delayAdaptiveQueue *queue.AdaptiveQueue[string]
 
 	holderIdentity    string
 	onNodeManagedFunc func(nodeName string)
+	waitFunc          func()
 }
 
 // NodeLeaseControllerConfig is the configuration for NodeLeaseController
@@ -68,6 +70,7 @@ type NodeLeaseControllerConfig struct {
 	RenewIntervalJitter  float64
 	MutateLeaseFunc      func(*coordinationv1.Lease) error
 	OnNodeManagedFunc    func(nodeName string)
+	WaitFunc             func()
 }
 
 // NewNodeLeaseController constructs and returns a NodeLeaseController
@@ -92,6 +95,7 @@ func NewNodeLeaseController(conf NodeLeaseControllerConfig) (*NodeLeaseControlle
 		delayQueue:           queue.NewWeightDelayingQueue[string](conf.Clock),
 		holderIdentity:       conf.HolderIdentity,
 		onNodeManagedFunc:    conf.OnNodeManagedFunc,
+		waitFunc:             conf.WaitFunc,
 	}
 
 	return c, nil
@@ -99,6 +103,7 @@ func NewNodeLeaseController(conf NodeLeaseControllerConfig) (*NodeLeaseControlle
 
 // Start starts the NodeLeaseController
 func (c *NodeLeaseController) Start(ctx context.Context) error {
+	c.delayAdaptiveQueue = queue.NewAdaptiveQueue(ctx, c.delayQueue, c.syncWorker)
 	for i := uint(0); i < c.leaseParallelism; i++ {
 		go c.syncWorker(ctx)
 	}
@@ -108,7 +113,10 @@ func (c *NodeLeaseController) Start(ctx context.Context) error {
 func (c *NodeLeaseController) syncWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
-		nodeName, ok := c.delayQueue.GetOrWaitWithDone(ctx.Done())
+		if c.waitFunc != nil {
+			c.waitFunc()
+		}
+		nodeName, ok := c.delayAdaptiveQueue.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
 		}

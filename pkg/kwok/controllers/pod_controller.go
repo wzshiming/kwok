@@ -64,6 +64,7 @@ type PodController struct {
 	playStageParallelism                  uint
 	lifecycle                             resources.Getter[lifecycle.Lifecycle]
 	delayQueue                            queue.WeightDelayingQueue[resourceStageJob[*corev1.Pod]]
+	delayAdaptiveQueue                    *queue.AdaptiveQueue[resourceStageJob[*corev1.Pod]]
 	backoff                               wait.Backoff
 	delayQueueMapping                     maps.SyncMap[string, resourceStageJob[*corev1.Pod]]
 	recorder                              record.EventRecorder
@@ -148,6 +149,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 // It will modify the pods status to we want
 func (c *PodController) Start(ctx context.Context, events <-chan informer.Event[*corev1.Pod]) error {
 	go c.preprocessWorker(ctx)
+	c.delayAdaptiveQueue = queue.NewAdaptiveQueue(ctx, c.delayQueue, c.playStageWorker)
 	for i := uint(0); i < c.playStageParallelism; i++ {
 		go c.playStageWorker(ctx)
 	}
@@ -258,7 +260,7 @@ func (c *PodController) playStageWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 
 	for ctx.Err() == nil {
-		pod, ok := c.delayQueue.GetOrWaitWithDone(ctx.Done())
+		pod, ok := c.delayAdaptiveQueue.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
 		}

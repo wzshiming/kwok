@@ -94,7 +94,10 @@ type Controller struct {
 	stageGetter resources.DynamicGetter[[]*internalversion.Stage]
 
 	podOnNodeManageQueue queue.Queue[string]
-	nodeManageQueue      queue.Queue[string]
+	nodeManageQueue      queue.DelayingQueue[string]
+
+	podOnNodeManageAdaptiveQueue *queue.AdaptiveQueue[string]
+	nodeManageAdaptiveQueue      *queue.AdaptiveQueue[string]
 }
 
 // Config is the configuration for the controller
@@ -221,7 +224,7 @@ func (c *Controller) init(ctx context.Context) (err error) {
 	c.patchMeta = patch.NewPatchMetaFromOpenAPI3(c.conf.RESTClient)
 
 	c.podOnNodeManageQueue = queue.NewQueue[string]()
-	c.nodeManageQueue = queue.NewQueue[string]()
+	c.nodeManageQueue = queue.NewDelayingQueue[string](c.conf.Clock)
 	return nil
 }
 
@@ -275,7 +278,11 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 		HolderIdentity: c.conf.ID,
 		OnNodeManagedFunc: func(nodeName string) {
 			c.nodeManageQueue.Add(nodeName)
-			c.podOnNodeManageQueue.Add(nodeName)
+		},
+		WaitFunc: func() {
+			for c.nodeManageQueue.Len() > 16 {
+				time.Sleep(100 * time.Millisecond)
+			}
 		},
 	})
 	if err != nil {
@@ -295,6 +302,7 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 		c.nodeLeases.ReleaseHold(nodeName)
 	}
 
+	c.nodeManageAdaptiveQueue = queue.NewAdaptiveQueue(ctx, c.nodeManageQueue, c.nodeLeaseSyncWorker)
 	go c.nodeLeaseSyncWorker(ctx)
 
 	err = c.nodeLeases.Start(ctx)
@@ -305,26 +313,21 @@ func (c *Controller) initNodeLeaseController(ctx context.Context) error {
 }
 
 func (c *Controller) nodeLeaseSyncWorker(ctx context.Context) {
-	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
-		nodeName, ok := c.nodeManageQueue.GetOrWaitWithDone(ctx.Done())
+		nodeName, ok := c.nodeManageAdaptiveQueue.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
 		}
 		node, ok := c.nodeCacheGetter.Get(nodeName)
 		if !ok {
-			logger.Warn("node not found in cache", "node", nodeName)
-			err := c.nodesInformer.Sync(ctx, informer.Option{
-				FieldSelector: fields.OneTermEqualSelector("metadata.name", nodeName).String(),
-			}, c.nodesChan)
-			if err != nil {
-				logger.Error("failed to update node", err, "node", nodeName)
-			}
+			c.nodeManageQueue.AddAfter(nodeName, time.Second)
 			continue
 		}
 
 		// Avoid slow cache synchronization, which may be judged as unmanaged.
 		c.nodes.ManageNode(node)
+
+		c.podOnNodeManageQueue.Add(nodeName)
 	}
 }
 
@@ -339,6 +342,7 @@ func (c *Controller) startStageController(ctx context.Context, ref internalversi
 			return fmt.Errorf("failed to init pod controller: %w", err)
 		}
 
+		c.podOnNodeManageAdaptiveQueue = queue.NewAdaptiveQueue(ctx, c.podOnNodeManageQueue, c.podsOnNodeSyncWorker)
 		go c.podsOnNodeSyncWorker(ctx)
 
 	case nodeRef:
@@ -559,7 +563,7 @@ func (c *Controller) Start(ctx context.Context) error {
 func (c *Controller) podsOnNodeSyncWorker(ctx context.Context) {
 	logger := log.FromContext(ctx)
 	for ctx.Err() == nil {
-		nodeName, ok := c.podOnNodeManageQueue.GetOrWaitWithDone(ctx.Done())
+		nodeName, ok := c.podOnNodeManageAdaptiveQueue.GetOrWaitWithDone(ctx.Done())
 		if !ok {
 			return
 		}
