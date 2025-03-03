@@ -50,11 +50,19 @@ type NodeLeaseController struct {
 	mutateLeaseFunc func(*coordinationv1.Lease) error
 
 	delayQueue   queue.WeightDelayingQueue[string]
-	holdLeaseSet maps.SyncMap[string, bool]
+	holdLeaseSet maps.SyncMap[string, leaseStatus]
 
 	holderIdentity    string
 	onNodeManagedFunc func(nodeName string)
 }
+
+type leaseStatus int
+
+const (
+	tryHoldLease leaseStatus = iota
+	holdLease
+	releaseLease
+)
 
 // NodeLeaseControllerConfig is the configuration for NodeLeaseController
 type NodeLeaseControllerConfig struct {
@@ -112,10 +120,18 @@ func (c *NodeLeaseController) syncWorker(ctx context.Context) {
 		if !ok {
 			return
 		}
-		first, ok := c.holdLeaseSet.Load(nodeName)
+		status, ok := c.holdLeaseSet.Load(nodeName)
 		if !ok {
 			continue
 		}
+
+		if status == releaseLease {
+			c.holdLeaseSet.Delete(nodeName)
+			c.release(ctx, nodeName)
+			continue
+		}
+
+		first := status == tryHoldLease
 
 		dur := c.interval()
 
@@ -135,7 +151,7 @@ func (c *NodeLeaseController) syncWorker(ctx context.Context) {
 		}
 
 		if first {
-			c.holdLeaseSet.Store(nodeName, false)
+			c.holdLeaseSet.Store(nodeName, holdLease)
 		}
 
 		now := c.clock.Now()
@@ -152,7 +168,7 @@ func (c *NodeLeaseController) interval() time.Duration {
 
 // TryHold tries to hold a lease for the NodeLeaseController
 func (c *NodeLeaseController) TryHold(name string) {
-	_, loaded := c.holdLeaseSet.LoadOrStore(name, true)
+	_, loaded := c.holdLeaseSet.LoadOrStore(name, tryHoldLease)
 	if !loaded {
 		c.delayQueue.Add(name)
 	}
@@ -160,8 +176,10 @@ func (c *NodeLeaseController) TryHold(name string) {
 
 // ReleaseHold releases a lease for the NodeLeaseController
 func (c *NodeLeaseController) ReleaseHold(name string) {
-	_ = c.delayQueue.Cancel(name)
-	c.holdLeaseSet.Delete(name)
+	_, loaded := c.holdLeaseSet.Swap(name, releaseLease)
+	if !loaded {
+		c.delayQueue.Add(name)
+	}
 }
 
 // Held returns true if the NodeLeaseController holds the lease
@@ -218,6 +236,17 @@ func (c *NodeLeaseController) sync(ctx context.Context, nodeName string, first b
 
 	c.onNodeManaged(nodeName)
 	return lease, nil
+}
+
+func (c *NodeLeaseController) release(ctx context.Context, nodeName string) error {
+	logger := log.FromContext(ctx)
+	logger = logger.With("node", nodeName)
+	logger.Info("Release lease")
+	err := c.typedClient.CoordinationV1().Leases(corev1.NamespaceNodeLease).Delete(ctx, nodeName, metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *NodeLeaseController) onNodeManaged(nodeName string) {

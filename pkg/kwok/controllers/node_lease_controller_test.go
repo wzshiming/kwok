@@ -135,8 +135,8 @@ func TestNodeLeaseController(t *testing.T) {
 		t.Error("lease4 held")
 	}
 
-	_ = clientset.CoordinationV1().Leases(corev1.NamespaceNodeLease).Delete(ctx, "lease1", metav1.DeleteOptions{})
-	time.Sleep(2 * time.Second)
+	nodeLeases.ReleaseHold("lease1")
+	time.Sleep(11 * time.Second)
 
 	if !nodeLeases.Held("lease0") {
 		t.Error("lease0 not held")
