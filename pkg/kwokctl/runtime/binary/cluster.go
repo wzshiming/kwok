@@ -1127,7 +1127,7 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 	if err != nil {
 		return err
 	}
-	_, err = f.Write([]byte(fmt.Sprintf("%s/%s", rt.GOOS, rt.GOARCH)))
+	_, err = fmt.Fprintf(f, "%s/%s", rt.GOOS, rt.GOARCH)
 	if err != nil {
 		return err
 	}

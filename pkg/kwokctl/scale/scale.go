@@ -309,7 +309,7 @@ type softInfo struct {
 }
 
 func (s softInfo) Less(creationTimestamp metav1.Time, name string) bool {
-	cmp := s.CreationTimestamp.Time.Compare(creationTimestamp.Time)
+	cmp := s.CreationTimestamp.Compare(creationTimestamp.Time)
 	if cmp == 0 {
 		return s.Name < name
 	}
