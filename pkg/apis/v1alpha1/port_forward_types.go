@@ -71,6 +71,8 @@ type Forward struct {
 	// Command is the command to run to forward with stdin/stdout.
 	// if set, Target will be ignored.
 	Command []string `json:"command,omitempty"`
+	// ResponseHTTPNotFound specifies whether to respond with HTTP 404 Not Found status for virtual forwarding.
+	ResponseHTTPNotFound bool `json:"responseHTTPNotFound,omitempty"`
 }
 
 // ForwardTarget holds information how to forward to a target.

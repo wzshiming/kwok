@@ -1473,6 +1473,7 @@ func autoConvert_internalversion_Forward_To_v1alpha1_Forward(in *Forward, out *v
 	out.Ports = *(*[]int32)(unsafe.Pointer(&in.Ports))
 	out.Target = (*v1alpha1.ForwardTarget)(unsafe.Pointer(in.Target))
 	out.Command = *(*[]string)(unsafe.Pointer(&in.Command))
+	out.ResponseHTTPNotFound = in.ResponseHTTPNotFound
 	return nil
 }
 
@@ -1485,6 +1486,7 @@ func autoConvert_v1alpha1_Forward_To_internalversion_Forward(in *v1alpha1.Forwar
 	out.Ports = *(*[]int32)(unsafe.Pointer(&in.Ports))
 	out.Target = (*ForwardTarget)(unsafe.Pointer(in.Target))
 	out.Command = *(*[]string)(unsafe.Pointer(&in.Command))
+	out.ResponseHTTPNotFound = in.ResponseHTTPNotFound
 	return nil
 }
 

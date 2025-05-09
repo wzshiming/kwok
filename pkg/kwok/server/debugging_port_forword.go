@@ -78,6 +78,11 @@ func (s *Server) PortForward(ctx context.Context, name string, uid types.UID, po
 		return utilsnet.Tunnel(ctx, stream, dial, buf1, buf2)
 	}
 
+	if forward.ResponseHTTPNotFound {
+		portForwardHandle(setServerHeaderMiddleware(http.HandlerFunc(http.NotFound)), stream)
+		return nil
+	}
+
 	return errors.New("no target or command")
 }
 
