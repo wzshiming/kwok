@@ -68,9 +68,15 @@ func (l *Logger) Warn(msg string, args ...any) {
 }
 
 // Error logs an error message.
-func (l *Logger) Error(msg string, err error, args ...any) {
-	if err != nil {
-		args = append(args[:len(args):len(args)], slog.Any("err", err))
+func (l *Logger) Error(msg string, args ...any) {
+	if len(args)%2 == 1 {
+		// Special handling for the first argument if it's an error, for backward compatibility
+		err, _ := args[0].(error)
+		if err != nil {
+			args[0] = slog.Any("err", err)
+		} else {
+			args = args[1:]
+		}
 	}
 	l.log(LevelError, msg, args...)
 }
