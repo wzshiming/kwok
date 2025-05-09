@@ -41,6 +41,11 @@ func versionInfo(version, preRelease string) string {
 	return ver.String()
 }
 
+// DefaultHTTPServer is the version string for the the of the http response header
+func DefaultHTTPServer() string {
+	return fmt.Sprintf("%s/%s", adjustCommand(os.Args[0]), versionInfo(consts.Version, consts.PreRelease))
+}
+
 // DisplayVersion is the version string for the current build
 func DisplayVersion() string {
 	return fmt.Sprintf("%s %s (%s/%s)", AddPrefixV(versionInfo(consts.Version, consts.PreRelease)), runtime.Version(), runtime.GOOS, runtime.GOARCH)
