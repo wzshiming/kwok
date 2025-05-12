@@ -4113,6 +4113,19 @@ string
 <p>LogsFile is the file from which the attach starts</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>sandbox</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExecSandbox">
+ExecSandbox
+</a>
+</em>
+</td>
+<td>
+<p>Sandbox defines the sandbox configuration for exec operations</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="kwok.x-k8s.io/v1alpha1.AttachSpec">
@@ -4816,6 +4829,87 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ExecSandbox">
+ExecSandbox
+<a href="#kwok.x-k8s.io%2fv1alpha1.ExecSandbox"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.AttachConfig">AttachConfig</a>
+, 
+<a href="#kwok.x-k8s.io/v1alpha1.ExecTarget">ExecTarget</a>
+</p>
+<p>
+<p>ExecSandbox represents a sandbox environment configuration for exec operations</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>extraCommands</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExecSandboxExtraCommand">
+[]ExecSandboxExtraCommand
+</a>
+</em>
+</td>
+<td>
+<p>ExtraCommands defines the list of commands available in the sandbox environment</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.ExecSandboxExtraCommand">
+ExecSandboxExtraCommand
+<a href="#kwok.x-k8s.io%2fv1alpha1.ExecSandboxExtraCommand"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExecSandbox">ExecSandbox</a>
+</p>
+<p>
+<p>ExecSandboxExtraCommand represents a single command configuration in the sandbox</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>command</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Command is the name of the command to execute</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>steps</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.SandboxCommandStep">
+[]SandboxCommandStep
+</a>
+</em>
+</td>
+<td>
+<p>Steps defines the sequence of steps to execute for this command</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="kwok.x-k8s.io/v1alpha1.ExecSpec">
 ExecSpec
 <a href="#kwok.x-k8s.io%2fv1alpha1.ExecSpec"> #</a>
@@ -4928,6 +5022,19 @@ ExecTargetLocal
 </td>
 <td>
 <p>Local holds information how to exec to a local target.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sandbox</code>
+<em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExecSandbox">
+ExecSandbox
+</a>
+</em>
+</td>
+<td>
+<p>Sandbox defines the sandbox configuration for exec operations</p>
 </td>
 </tr>
 </tbody>
@@ -6227,6 +6334,60 @@ string
 </td>
 <td>
 <p>Expression is the expression for resource usage.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kwok.x-k8s.io/v1alpha1.SandboxCommandStep">
+SandboxCommandStep
+<a href="#kwok.x-k8s.io%2fv1alpha1.SandboxCommandStep"> #</a>
+</h3>
+<p>
+<em>Appears on: </em>
+<a href="#kwok.x-k8s.io/v1alpha1.ExecSandboxExtraCommand">ExecSandboxExtraCommand</a>
+</p>
+<p>
+<p>SandboxCommandStep represents a single step in a sandbox command execution</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>delayMilliseconds</code>
+<em>
+int64
+</em>
+</td>
+<td>
+<p>DelayMilliseconds specifies the delay before executing this step (in milliseconds)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>stdout</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Stdout specifies the standard output to write for this step</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>stderr</code>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Stderr specifies the standard error to write for this step</p>
 </td>
 </tr>
 </tbody>

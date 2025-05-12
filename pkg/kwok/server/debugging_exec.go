@@ -49,37 +49,41 @@ func (s *Server) ExecInContainer(ctx context.Context, name string, uid types.UID
 	}
 
 	// Currently only support local exec.
-	if execTarget.Local == nil {
-		return fmt.Errorf("not set local exec")
+	if execTarget.Local != nil {
+		// Set the environment variables.
+		if len(execTarget.Local.Envs) != 0 {
+			envs := slices.Map(execTarget.Local.Envs, func(env internalversion.EnvVar) string {
+				return fmt.Sprintf("%s=%s", env.Name, env.Value)
+			})
+			ctx = exec.WithEnv(ctx, envs)
+		}
+
+		// Set the user.
+		if execTarget.Local.SecurityContext != nil {
+			ctx = exec.WithUser(ctx, execTarget.Local.SecurityContext.RunAsUser, execTarget.Local.SecurityContext.RunAsGroup)
+		}
+
+		// Set the working directory.
+		if execTarget.Local.WorkDir != "" {
+			ctx = exec.WithDir(ctx, execTarget.Local.WorkDir)
+		}
+
+		// Set cancel context.
+		ctx, cancel := context.WithCancel(ctx)
+		defer cancel()
+
+		if tty {
+			return s.execInContainerWithTTY(ctx, cmd, in, out, resize)
+		}
+
+		return s.execInContainer(ctx, cmd, in, out, errOut)
 	}
 
-	// Set the environment variables.
-	if len(execTarget.Local.Envs) != 0 {
-		envs := slices.Map(execTarget.Local.Envs, func(env internalversion.EnvVar) string {
-			return fmt.Sprintf("%s=%s", env.Name, env.Value)
-		})
-		ctx = exec.WithEnv(ctx, envs)
+	if execTarget.Sandbox != nil {
+		return execInSandbox(ctx, execTarget.Sandbox, cmd, in, out, errOut, tty)
 	}
 
-	// Set the user.
-	if execTarget.Local.SecurityContext != nil {
-		ctx = exec.WithUser(ctx, execTarget.Local.SecurityContext.RunAsUser, execTarget.Local.SecurityContext.RunAsGroup)
-	}
-
-	// Set the working directory.
-	if execTarget.Local.WorkDir != "" {
-		ctx = exec.WithDir(ctx, execTarget.Local.WorkDir)
-	}
-
-	// Set cancel context.
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	if tty {
-		return s.execInContainerWithTTY(ctx, cmd, in, out, resize)
-	}
-
-	return s.execInContainer(ctx, cmd, in, out, errOut)
+	return fmt.Errorf("not set local/sandbox exec")
 }
 
 func (s *Server) execInContainer(ctx context.Context, cmd []string, in io.Reader, out, errOut io.WriteCloser) error {

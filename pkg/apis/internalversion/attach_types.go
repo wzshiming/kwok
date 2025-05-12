@@ -41,4 +41,6 @@ type AttachConfig struct {
 	Containers []string
 	// LogsFile is the file from which the attach starts
 	LogsFile string
+	// Sandbox defines the sandbox configuration for exec operations
+	Sandbox *ExecSandbox
 }

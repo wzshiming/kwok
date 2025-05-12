@@ -68,6 +68,32 @@ type ExecTarget struct {
 	Containers []string `json:"containers,omitempty"`
 	// Local holds information how to exec to a local target.
 	Local *ExecTargetLocal `json:"local,omitempty"`
+	// Sandbox defines the sandbox configuration for exec operations
+	Sandbox *ExecSandbox `json:"sandbox,omitempty"`
+}
+
+// ExecSandbox represents a sandbox environment configuration for exec operations
+type ExecSandbox struct {
+	// ExtraCommands defines the list of commands available in the sandbox environment
+	ExtraCommands []ExecSandboxExtraCommand `json:"extraCommands,omitempty"`
+}
+
+// ExecSandboxExtraCommand represents a single command configuration in the sandbox
+type ExecSandboxExtraCommand struct {
+	// Command is the name of the command to execute
+	Command string `json:"command,omitempty"`
+	// Steps defines the sequence of steps to execute for this command
+	Steps []SandboxCommandStep `json:"steps,omitempty"`
+}
+
+// SandboxCommandStep represents a single step in a sandbox command execution
+type SandboxCommandStep struct {
+	// DelayMilliseconds specifies the delay before executing this step (in milliseconds)
+	DelayMilliseconds *int64 `json:"delayMilliseconds,omitempty"`
+	// Stdout specifies the standard output to write for this step
+	Stdout *string `json:"stdout,omitempty"`
+	// Stderr specifies the standard error to write for this step
+	Stderr *string `json:"stderr,omitempty"`
 }
 
 // ExecTargetLocal holds information how to exec to a local target.

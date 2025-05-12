@@ -230,6 +230,26 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*ExecSandbox)(nil), (*v1alpha1.ExecSandbox)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ExecSandbox_To_v1alpha1_ExecSandbox(a.(*ExecSandbox), b.(*v1alpha1.ExecSandbox), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ExecSandbox)(nil), (*ExecSandbox)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ExecSandbox_To_internalversion_ExecSandbox(a.(*v1alpha1.ExecSandbox), b.(*ExecSandbox), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ExecSandboxExtraCommand)(nil), (*v1alpha1.ExecSandboxExtraCommand)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_ExecSandboxExtraCommand_To_v1alpha1_ExecSandboxExtraCommand(a.(*ExecSandboxExtraCommand), b.(*v1alpha1.ExecSandboxExtraCommand), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.ExecSandboxExtraCommand)(nil), (*ExecSandboxExtraCommand)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ExecSandboxExtraCommand_To_internalversion_ExecSandboxExtraCommand(a.(*v1alpha1.ExecSandboxExtraCommand), b.(*ExecSandboxExtraCommand), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*ExecSpec)(nil), (*v1alpha1.ExecSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_ExecSpec_To_v1alpha1_ExecSpec(a.(*ExecSpec), b.(*v1alpha1.ExecSpec), scope)
 	}); err != nil {
@@ -580,6 +600,16 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*SandboxCommandStep)(nil), (*v1alpha1.SandboxCommandStep)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_internalversion_SandboxCommandStep_To_v1alpha1_SandboxCommandStep(a.(*SandboxCommandStep), b.(*v1alpha1.SandboxCommandStep), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.SandboxCommandStep)(nil), (*SandboxCommandStep)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_SandboxCommandStep_To_internalversion_SandboxCommandStep(a.(*v1alpha1.SandboxCommandStep), b.(*SandboxCommandStep), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*SecurityContext)(nil), (*v1alpha1.SecurityContext)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_internalversion_SecurityContext_To_v1alpha1_SecurityContext(a.(*SecurityContext), b.(*v1alpha1.SecurityContext), scope)
 	}); err != nil {
@@ -756,6 +786,15 @@ func autoConvert_internalversion_AttachConfig_To_v1alpha1_AttachConfig(in *Attac
 	if err := v1.Convert_string_To_Pointer_string(&in.LogsFile, &out.LogsFile, s); err != nil {
 		return err
 	}
+	if in.Sandbox != nil {
+		in, out := &in.Sandbox, &out.Sandbox
+		*out = new(v1alpha1.ExecSandbox)
+		if err := Convert_internalversion_ExecSandbox_To_v1alpha1_ExecSandbox(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Sandbox = nil
+	}
 	return nil
 }
 
@@ -768,6 +807,15 @@ func autoConvert_v1alpha1_AttachConfig_To_internalversion_AttachConfig(in *v1alp
 	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
 	if err := v1.Convert_Pointer_string_To_string(&in.LogsFile, &out.LogsFile, s); err != nil {
 		return err
+	}
+	if in.Sandbox != nil {
+		in, out := &in.Sandbox, &out.Sandbox
+		*out = new(ExecSandbox)
+		if err := Convert_v1alpha1_ExecSandbox_To_internalversion_ExecSandbox(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Sandbox = nil
 	}
 	return nil
 }
@@ -917,7 +965,17 @@ func Convert_v1alpha1_ClusterExec_To_internalversion_ClusterExec(in *v1alpha1.Cl
 
 func autoConvert_internalversion_ClusterExecSpec_To_v1alpha1_ClusterExecSpec(in *ClusterExecSpec, out *v1alpha1.ClusterExecSpec, s conversion.Scope) error {
 	out.Selector = (*v1alpha1.ObjectSelector)(unsafe.Pointer(in.Selector))
-	out.Execs = *(*[]v1alpha1.ExecTarget)(unsafe.Pointer(&in.Execs))
+	if in.Execs != nil {
+		in, out := &in.Execs, &out.Execs
+		*out = make([]v1alpha1.ExecTarget, len(*in))
+		for i := range *in {
+			if err := Convert_internalversion_ExecTarget_To_v1alpha1_ExecTarget(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Execs = nil
+	}
 	return nil
 }
 
@@ -928,7 +986,17 @@ func Convert_internalversion_ClusterExecSpec_To_v1alpha1_ClusterExecSpec(in *Clu
 
 func autoConvert_v1alpha1_ClusterExecSpec_To_internalversion_ClusterExecSpec(in *v1alpha1.ClusterExecSpec, out *ClusterExecSpec, s conversion.Scope) error {
 	out.Selector = (*ObjectSelector)(unsafe.Pointer(in.Selector))
-	out.Execs = *(*[]ExecTarget)(unsafe.Pointer(&in.Execs))
+	if in.Execs != nil {
+		in, out := &in.Execs, &out.Execs
+		*out = make([]ExecTarget, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha1_ExecTarget_To_internalversion_ExecTarget(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Execs = nil
+	}
 	return nil
 }
 
@@ -1321,8 +1389,100 @@ func Convert_v1alpha1_Exec_To_internalversion_Exec(in *v1alpha1.Exec, out *Exec,
 	return autoConvert_v1alpha1_Exec_To_internalversion_Exec(in, out, s)
 }
 
+func autoConvert_internalversion_ExecSandbox_To_v1alpha1_ExecSandbox(in *ExecSandbox, out *v1alpha1.ExecSandbox, s conversion.Scope) error {
+	if in.ExtraCommands != nil {
+		in, out := &in.ExtraCommands, &out.ExtraCommands
+		*out = make([]v1alpha1.ExecSandboxExtraCommand, len(*in))
+		for i := range *in {
+			if err := Convert_internalversion_ExecSandboxExtraCommand_To_v1alpha1_ExecSandboxExtraCommand(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.ExtraCommands = nil
+	}
+	return nil
+}
+
+// Convert_internalversion_ExecSandbox_To_v1alpha1_ExecSandbox is an autogenerated conversion function.
+func Convert_internalversion_ExecSandbox_To_v1alpha1_ExecSandbox(in *ExecSandbox, out *v1alpha1.ExecSandbox, s conversion.Scope) error {
+	return autoConvert_internalversion_ExecSandbox_To_v1alpha1_ExecSandbox(in, out, s)
+}
+
+func autoConvert_v1alpha1_ExecSandbox_To_internalversion_ExecSandbox(in *v1alpha1.ExecSandbox, out *ExecSandbox, s conversion.Scope) error {
+	if in.ExtraCommands != nil {
+		in, out := &in.ExtraCommands, &out.ExtraCommands
+		*out = make([]ExecSandboxExtraCommand, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha1_ExecSandboxExtraCommand_To_internalversion_ExecSandboxExtraCommand(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.ExtraCommands = nil
+	}
+	return nil
+}
+
+// Convert_v1alpha1_ExecSandbox_To_internalversion_ExecSandbox is an autogenerated conversion function.
+func Convert_v1alpha1_ExecSandbox_To_internalversion_ExecSandbox(in *v1alpha1.ExecSandbox, out *ExecSandbox, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ExecSandbox_To_internalversion_ExecSandbox(in, out, s)
+}
+
+func autoConvert_internalversion_ExecSandboxExtraCommand_To_v1alpha1_ExecSandboxExtraCommand(in *ExecSandboxExtraCommand, out *v1alpha1.ExecSandboxExtraCommand, s conversion.Scope) error {
+	out.Command = in.Command
+	if in.Steps != nil {
+		in, out := &in.Steps, &out.Steps
+		*out = make([]v1alpha1.SandboxCommandStep, len(*in))
+		for i := range *in {
+			if err := Convert_internalversion_SandboxCommandStep_To_v1alpha1_SandboxCommandStep(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Steps = nil
+	}
+	return nil
+}
+
+// Convert_internalversion_ExecSandboxExtraCommand_To_v1alpha1_ExecSandboxExtraCommand is an autogenerated conversion function.
+func Convert_internalversion_ExecSandboxExtraCommand_To_v1alpha1_ExecSandboxExtraCommand(in *ExecSandboxExtraCommand, out *v1alpha1.ExecSandboxExtraCommand, s conversion.Scope) error {
+	return autoConvert_internalversion_ExecSandboxExtraCommand_To_v1alpha1_ExecSandboxExtraCommand(in, out, s)
+}
+
+func autoConvert_v1alpha1_ExecSandboxExtraCommand_To_internalversion_ExecSandboxExtraCommand(in *v1alpha1.ExecSandboxExtraCommand, out *ExecSandboxExtraCommand, s conversion.Scope) error {
+	out.Command = in.Command
+	if in.Steps != nil {
+		in, out := &in.Steps, &out.Steps
+		*out = make([]SandboxCommandStep, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha1_SandboxCommandStep_To_internalversion_SandboxCommandStep(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Steps = nil
+	}
+	return nil
+}
+
+// Convert_v1alpha1_ExecSandboxExtraCommand_To_internalversion_ExecSandboxExtraCommand is an autogenerated conversion function.
+func Convert_v1alpha1_ExecSandboxExtraCommand_To_internalversion_ExecSandboxExtraCommand(in *v1alpha1.ExecSandboxExtraCommand, out *ExecSandboxExtraCommand, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ExecSandboxExtraCommand_To_internalversion_ExecSandboxExtraCommand(in, out, s)
+}
+
 func autoConvert_internalversion_ExecSpec_To_v1alpha1_ExecSpec(in *ExecSpec, out *v1alpha1.ExecSpec, s conversion.Scope) error {
-	out.Execs = *(*[]v1alpha1.ExecTarget)(unsafe.Pointer(&in.Execs))
+	if in.Execs != nil {
+		in, out := &in.Execs, &out.Execs
+		*out = make([]v1alpha1.ExecTarget, len(*in))
+		for i := range *in {
+			if err := Convert_internalversion_ExecTarget_To_v1alpha1_ExecTarget(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Execs = nil
+	}
 	return nil
 }
 
@@ -1332,7 +1492,17 @@ func Convert_internalversion_ExecSpec_To_v1alpha1_ExecSpec(in *ExecSpec, out *v1
 }
 
 func autoConvert_v1alpha1_ExecSpec_To_internalversion_ExecSpec(in *v1alpha1.ExecSpec, out *ExecSpec, s conversion.Scope) error {
-	out.Execs = *(*[]ExecTarget)(unsafe.Pointer(&in.Execs))
+	if in.Execs != nil {
+		in, out := &in.Execs, &out.Execs
+		*out = make([]ExecTarget, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha1_ExecTarget_To_internalversion_ExecTarget(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Execs = nil
+	}
 	return nil
 }
 
@@ -1344,6 +1514,15 @@ func Convert_v1alpha1_ExecSpec_To_internalversion_ExecSpec(in *v1alpha1.ExecSpec
 func autoConvert_internalversion_ExecTarget_To_v1alpha1_ExecTarget(in *ExecTarget, out *v1alpha1.ExecTarget, s conversion.Scope) error {
 	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
 	out.Local = (*v1alpha1.ExecTargetLocal)(unsafe.Pointer(in.Local))
+	if in.Sandbox != nil {
+		in, out := &in.Sandbox, &out.Sandbox
+		*out = new(v1alpha1.ExecSandbox)
+		if err := Convert_internalversion_ExecSandbox_To_v1alpha1_ExecSandbox(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Sandbox = nil
+	}
 	return nil
 }
 
@@ -1355,6 +1534,15 @@ func Convert_internalversion_ExecTarget_To_v1alpha1_ExecTarget(in *ExecTarget, o
 func autoConvert_v1alpha1_ExecTarget_To_internalversion_ExecTarget(in *v1alpha1.ExecTarget, out *ExecTarget, s conversion.Scope) error {
 	out.Containers = *(*[]string)(unsafe.Pointer(&in.Containers))
 	out.Local = (*ExecTargetLocal)(unsafe.Pointer(in.Local))
+	if in.Sandbox != nil {
+		in, out := &in.Sandbox, &out.Sandbox
+		*out = new(ExecSandbox)
+		if err := Convert_v1alpha1_ExecSandbox_To_internalversion_ExecSandbox(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Sandbox = nil
+	}
 	return nil
 }
 
@@ -2520,6 +2708,42 @@ func autoConvert_v1alpha1_ResourceUsageValue_To_internalversion_ResourceUsageVal
 // Convert_v1alpha1_ResourceUsageValue_To_internalversion_ResourceUsageValue is an autogenerated conversion function.
 func Convert_v1alpha1_ResourceUsageValue_To_internalversion_ResourceUsageValue(in *v1alpha1.ResourceUsageValue, out *ResourceUsageValue, s conversion.Scope) error {
 	return autoConvert_v1alpha1_ResourceUsageValue_To_internalversion_ResourceUsageValue(in, out, s)
+}
+
+func autoConvert_internalversion_SandboxCommandStep_To_v1alpha1_SandboxCommandStep(in *SandboxCommandStep, out *v1alpha1.SandboxCommandStep, s conversion.Scope) error {
+	if err := v1.Convert_int64_To_Pointer_int64(&in.DelayMilliseconds, &out.DelayMilliseconds, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_string_To_Pointer_string(&in.Stdout, &out.Stdout, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_string_To_Pointer_string(&in.Stderr, &out.Stderr, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_internalversion_SandboxCommandStep_To_v1alpha1_SandboxCommandStep is an autogenerated conversion function.
+func Convert_internalversion_SandboxCommandStep_To_v1alpha1_SandboxCommandStep(in *SandboxCommandStep, out *v1alpha1.SandboxCommandStep, s conversion.Scope) error {
+	return autoConvert_internalversion_SandboxCommandStep_To_v1alpha1_SandboxCommandStep(in, out, s)
+}
+
+func autoConvert_v1alpha1_SandboxCommandStep_To_internalversion_SandboxCommandStep(in *v1alpha1.SandboxCommandStep, out *SandboxCommandStep, s conversion.Scope) error {
+	if err := v1.Convert_Pointer_int64_To_int64(&in.DelayMilliseconds, &out.DelayMilliseconds, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_Pointer_string_To_string(&in.Stdout, &out.Stdout, s); err != nil {
+		return err
+	}
+	if err := v1.Convert_Pointer_string_To_string(&in.Stderr, &out.Stderr, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_v1alpha1_SandboxCommandStep_To_internalversion_SandboxCommandStep is an autogenerated conversion function.
+func Convert_v1alpha1_SandboxCommandStep_To_internalversion_SandboxCommandStep(in *v1alpha1.SandboxCommandStep, out *SandboxCommandStep, s conversion.Scope) error {
+	return autoConvert_v1alpha1_SandboxCommandStep_To_internalversion_SandboxCommandStep(in, out, s)
 }
 
 func autoConvert_internalversion_SecurityContext_To_v1alpha1_SecurityContext(in *SecurityContext, out *v1alpha1.SecurityContext, s conversion.Scope) error {

@@ -91,6 +91,46 @@ spec:
                           description: WorkDir is the working directory to exec with.
                           type: string
                       type: object
+                    sandbox:
+                      description: Sandbox defines the sandbox configuration for exec
+                        operations
+                      properties:
+                        extraCommands:
+                          description: ExtraCommands defines the list of commands
+                            available in the sandbox environment
+                          items:
+                            description: ExecSandboxExtraCommand represents a single
+                              command configuration in the sandbox
+                            properties:
+                              command:
+                                description: Command is the name of the command to
+                                  execute
+                                type: string
+                              steps:
+                                description: Steps defines the sequence of steps to
+                                  execute for this command
+                                items:
+                                  description: SandboxCommandStep represents a single
+                                    step in a sandbox command execution
+                                  properties:
+                                    delayMilliseconds:
+                                      description: DelayMilliseconds specifies the
+                                        delay before executing this step (in milliseconds)
+                                      format: int64
+                                      type: integer
+                                    stderr:
+                                      description: Stderr specifies the standard error
+                                        to write for this step
+                                      type: string
+                                    stdout:
+                                      description: Stdout specifies the standard output
+                                        to write for this step
+                                      type: string
+                                  type: object
+                                type: array
+                            type: object
+                          type: array
+                      type: object
                   type: object
                 type: array
             required:

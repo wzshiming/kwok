@@ -1,0 +1,14 @@
+kind: ClusterExec
+apiVersion: kwok.x-k8s.io/v1alpha1
+metadata:
+  name: default-sandbox-exec
+spec:
+  execs:
+  - sandbox:
+      extraCommands:
+      - command: uname
+        steps:
+        - stdout: "Linux\r\n"
+      - command: whoami
+        steps:
+        - stdout: "root\r\n"

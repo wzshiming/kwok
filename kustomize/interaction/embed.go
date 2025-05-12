@@ -25,4 +25,12 @@ var (
 	// DefaultClusterPortForward is the default port forward.
 	//go:embed cluster-port-forward.yaml
 	DefaultClusterPortForward string
+
+	// DefaultClusterExec is the default exec.
+	//go:embed cluster-exec.yaml
+	DefaultClusterExec string
+
+	// DefaultClusterAttach is the default attach.
+	//go:embed cluster-attach.yaml
+	DefaultClusterAttach string
 )

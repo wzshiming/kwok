@@ -50,12 +50,20 @@ func (s *Server) AttachContainer(ctx context.Context, name string, uid types.UID
 		return err
 	}
 
-	var tailLines int64
-	opts := crilogs.NewLogOptions(&corev1.PodLogOptions{
-		TailLines: &tailLines,
-		Follow:    true,
-	}, time.Now())
-	return readLogs(ctx, attach.LogsFile, opts, out, errOut)
+	if attach.LogsFile != "" {
+		var tailLines int64
+		opts := crilogs.NewLogOptions(&corev1.PodLogOptions{
+			TailLines: &tailLines,
+			Follow:    true,
+		}, time.Now())
+		return readLogs(ctx, attach.LogsFile, opts, out, errOut)
+	}
+
+	if attach.Sandbox != nil {
+		return execInSandbox(ctx, attach.Sandbox, []string{"sh"}, in, out, errOut, tty)
+	}
+
+	return fmt.Errorf("not set logsFile/sandbox attach")
 }
 
 func (s *Server) getAttach(req *restful.Request, resp *restful.Response) {

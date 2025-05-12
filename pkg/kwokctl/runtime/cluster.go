@@ -236,7 +236,15 @@ func (c *Cluster) Save(ctx context.Context) error {
 
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ClusterAttachKind) {
 		stages := config.FilterWithTypeFromContext[*internalversion.ClusterAttach](ctx)
-		objs = appendIntoInternalObjects(objs, stages...)
+		if len(stages) == 0 {
+			m, err := config.UnmarshalWithType[*internalversion.ClusterAttach, string](interaction.DefaultClusterAttach)
+			if err != nil {
+				return err
+			}
+			objs = appendIntoInternalObjects(objs, m)
+		} else {
+			objs = appendIntoInternalObjects(objs, stages...)
+		}
 	}
 
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ExecKind) {
@@ -246,7 +254,15 @@ func (c *Cluster) Save(ctx context.Context) error {
 
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ClusterExecKind) {
 		stages := config.FilterWithTypeFromContext[*internalversion.ClusterExec](ctx)
-		objs = appendIntoInternalObjects(objs, stages...)
+		if len(stages) == 0 {
+			m, err := config.UnmarshalWithType[*internalversion.ClusterExec, string](interaction.DefaultClusterExec)
+			if err != nil {
+				return err
+			}
+			objs = appendIntoInternalObjects(objs, m)
+		} else {
+			objs = appendIntoInternalObjects(objs, stages...)
+		}
 	}
 
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.LogsKind) {

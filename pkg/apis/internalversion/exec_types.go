@@ -42,6 +42,32 @@ type ExecTarget struct {
 	Containers []string
 	// Local holds information how to exec to a local target.
 	Local *ExecTargetLocal
+	// Sandbox defines the sandbox configuration for exec operations
+	Sandbox *ExecSandbox
+}
+
+// ExecSandbox represents a sandbox environment configuration for exec operations
+type ExecSandbox struct {
+	// ExtraCommands defines the list of commands available in the sandbox environment
+	ExtraCommands []ExecSandboxExtraCommand
+}
+
+// ExecSandboxExtraCommand represents a single command configuration in the sandbox
+type ExecSandboxExtraCommand struct {
+	// Command is the name of the command to execute
+	Command string
+	// Steps defines the sequence of steps to execute for this command
+	Steps []SandboxCommandStep
+}
+
+// SandboxCommandStep represents a single step in a sandbox command execution
+type SandboxCommandStep struct {
+	// DelayMilliseconds specifies the delay before executing this step (in milliseconds)
+	DelayMilliseconds int64
+	// Stdout specifies the standard output to write for this step
+	Stdout string
+	// Stderr specifies the standard error to write for this step
+	Stderr string
 }
 
 // ExecTargetLocal holds information how to exec to a local target.
