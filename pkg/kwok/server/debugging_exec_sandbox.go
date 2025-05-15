@@ -19,18 +19,157 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
+	"os"
 	"path"
 	"strconv"
 	"strings"
 	"time"
 
 	"golang.org/x/term"
+	remotecommandclient "k8s.io/client-go/tools/remotecommand"
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
+
+	"mvdan.cc/sh/v3/interp"
+	"mvdan.cc/sh/v3/syntax"
 )
+
+func runAll(ctx context.Context, conf *internalversion.ExecSandbox, cmd []string, in io.Reader, out, errOut io.Writer, tty bool, resize <-chan remotecommandclient.TerminalSize) error {
+
+	if tty {
+		stream := struct {
+			io.Reader
+			io.Writer
+		}{
+			in,
+			out,
+		}
+
+		t := term.NewTerminal(stream, "")
+
+		errOut = t
+		out = t
+
+		pr, pw := io.Pipe()
+		in = pr
+		go func() {
+			for {
+				line, err := t.ReadLine()
+				if err != nil {
+					return
+				}
+				pw.Write([]byte(line))
+				pw.Write([]byte("\n"))
+			}
+		}()
+		if resize != nil {
+			go func() {
+				for s := range resize {
+					_ = t.SetSize(int(s.Width), int(s.Height))
+				}
+			}()
+		}
+	}
+
+	return runInteractive(ctx, in, out, errOut)
+}
+
+var testBuiltinsMap = map[string]func(interp.HandlerContext, []string) error{
+	"sleep": func(hc interp.HandlerContext, args []string) error {
+		if len(args) < 1 {
+			_, _ = io.WriteString(hc.Stderr, "sleep: missing operand\r\n")
+			return nil
+		}
+
+		for _, arg := range args {
+			duration, err := time.ParseDuration(arg)
+			if err != nil {
+				i, err := strconv.ParseInt(arg, 0, 0)
+				if err != nil {
+					_, _ = io.WriteString(hc.Stderr, fmt.Sprintf("sleep: invalid time interval '%s'\r\n", arg))
+					return nil
+				}
+				duration = time.Duration(i) * time.Second
+			}
+
+			time.Sleep(duration)
+		}
+		return nil
+	},
+	"date": func(hc interp.HandlerContext, s []string) error {
+		_, _ = io.WriteString(hc.Stdout, time.Now().UTC().Format(time.UnixDate)+"\r\n")
+		return nil
+	},
+}
+
+func testExecHandler(next interp.ExecHandlerFunc) interp.ExecHandlerFunc {
+	return func(ctx context.Context, args []string) error {
+		if fn := testBuiltinsMap[args[0]]; fn != nil {
+			return fn(interp.HandlerCtx(ctx), args[1:])
+		}
+		return nil
+		// return next(ctx, args)
+	}
+}
+
+func runInteractive(ctx context.Context, in io.Reader, out, errOut io.Writer) error {
+	r, err := interp.New(
+		interp.StdIO(nil, out, errOut),
+		interp.Interactive(true),
+		interp.ExecHandlers(testExecHandler),
+		interp.OpenHandler(func(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
+			return nil, os.ErrPermission
+		}),
+		interp.ReadDirHandler2(func(ctx context.Context, path string) ([]fs.DirEntry, error) {
+			return nil, os.ErrPermission
+		}),
+		interp.StatHandler(func(ctx context.Context, name string, followSymlinks bool) (fs.FileInfo, error) {
+			return nil, os.ErrPermission
+		}),
+	)
+	if err != nil {
+		return err
+	}
+
+	parser := syntax.NewParser()
+	fmt.Fprintf(out, "$ ")
+	var runErr error
+	fn := func(stmts []*syntax.Stmt) bool {
+		if parser.Incomplete() {
+			fmt.Fprintf(out, "> ")
+			return true
+		}
+		for _, stmt := range stmts {
+			runErr = r.Run(ctx, stmt)
+			if r.Exited() {
+				return false
+			}
+		}
+		fmt.Fprintf(out, "$ ")
+		return true
+	}
+
+	if err := parser.Interactive(in, fn); err != nil {
+		return err
+	}
+	return runErr
+}
 
 // execInSandbox simulates container environments for Kubernetes exec debugging.
 // designed for development/testing scenarios requiring predictable container behavior.
-func execInSandbox(ctx context.Context, conf *internalversion.ExecSandbox, cmd []string, in io.Reader, out, errOut io.Writer, tty bool) error {
+func execInSandbox(ctx context.Context, conf *internalversion.ExecSandbox, cmd []string, in io.Reader, out, errOut io.Writer, tty bool, resize <-chan remotecommandclient.TerminalSize) error {
+	if resize != nil {
+		go func() {
+			for {
+				select {
+				case <-resize:
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
+	}
+
 	if tty {
 		errOut = out
 	}
@@ -44,8 +183,8 @@ func execInSandbox(ctx context.Context, conf *internalversion.ExecSandbox, cmd [
 	}
 
 	if !tty {
-		// TODO: Implement non-TTYshell command support
-		return fmt.Errorf("unsupport non-tty yet")
+		// TODO: Implement non-TTY (non-interactive) shell command support
+		return fmt.Errorf("unsupport yet")
 	}
 
 	t := newSandboxTerminal(in, out, conf)
@@ -127,6 +266,7 @@ var (
 			_, _ = io.WriteString(t.errOut, fmt.Sprintf("cd: no such file or directory: %s\r\n", dir))
 			return true
 		},
+
 		"date": func(t *sandboxContext, args []string) bool {
 			_, _ = io.WriteString(t.out, time.Now().UTC().Format(time.UnixDate)+"\r\n")
 			return true
@@ -179,7 +319,6 @@ func execInSandboxSingleCommand(ctx context.Context, conf *internalversion.ExecS
 		out:        out,
 		errOut:     errOut,
 	}
-
 	sc := getExecSandboxExtraCommand(conf, cmd[0])
 	if sc != nil {
 		return runSandboxCommand(ctx, sc, &sctx)
@@ -203,9 +342,8 @@ func newSandboxTerminal(in io.Reader, out io.Writer, conf *internalversion.ExecS
 		in,
 		out,
 	}
+	t := term.NewTerminal(stream, "# ")
 
-	var prompt = "# "
-	t := term.NewTerminal(stream, prompt)
 	st := &sandboxTerminal{
 		terminal: t,
 		conf:     conf,
