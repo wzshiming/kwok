@@ -15,7 +15,7 @@
 
 DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 
-source "${DIR}/suite.sh"
+source "${DIR}/helper.sh"
 
 function main() {
   local all_releases=("${@}")
