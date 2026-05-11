@@ -21,8 +21,8 @@ import (
 	"sync"
 	"time"
 
-	"sigs.k8s.io/kwok/pkg/utils/heap"
-	"sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsheap "sigs.k8s.io/kwok/pkg/utils/heap"
+	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
 )
 
 // WeightDelayingQueue is a generic weight delaying queue interface.
@@ -46,8 +46,8 @@ type weightDelayingQueue[T comparable] struct {
 
 	clock Clock
 
-	heap  *heap.Heap[int64, T]
-	heaps map[int]*heap.Heap[int64, T]
+	heap  *utilsheap.Heap[int64, T]
+	heaps map[int]*utilsheap.Heap[int64, T]
 
 	signal chan struct{}
 	mut    sync.Mutex
@@ -58,8 +58,8 @@ func NewWeightDelayingQueue[T comparable](clock Clock) WeightDelayingQueue[T] {
 	q := &weightDelayingQueue[T]{
 		WeightQueue: NewWeightQueue[T](),
 		clock:       clock,
-		heap:        heap.NewHeap[int64, T](),
-		heaps:       map[int]*heap.Heap[int64, T]{},
+		heap:        utilsheap.NewHeap[int64, T](),
+		heaps:       map[int]*utilsheap.Heap[int64, T]{},
 		signal:      make(chan struct{}, 1),
 	}
 	go q.loopWorker()
@@ -82,7 +82,7 @@ func (q *weightDelayingQueue[T]) AddWeightAfter(item T, weight int, duration tim
 		q.heap.Push(k, item)
 	} else {
 		if q.heaps[weight] == nil {
-			q.heaps[weight] = heap.NewHeap[int64, T]()
+			q.heaps[weight] = utilsheap.NewHeap[int64, T]()
 		}
 		q.heaps[weight].Push(k, item)
 	}
@@ -134,7 +134,7 @@ func (q *weightDelayingQueue[T]) next() (t T, weight int, ok bool, wait *time.Du
 
 	// Check if the orders slice is out of sync with the queues map
 	if len(q.orders) != len(q.heaps) {
-		orders := maps.Keys(q.heaps)
+		orders := utilsmaps.Keys(q.heaps)
 		sort.Ints(orders)
 		q.orders = orders
 	}

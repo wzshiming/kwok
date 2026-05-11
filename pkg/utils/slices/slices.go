@@ -16,8 +16,6 @@ limitations under the License.
 
 package slices
 
-import "slices"
-
 // Map returns a new slice containing the results of applying the given function
 func Map[S ~[]T, T any, O any](s S, f func(T) O) []O {
 	out := make([]O, len(s))
@@ -74,11 +72,6 @@ func FilterAndMap[S ~[]T, T any, O any](s S, f func(T) (O, bool)) []O {
 	return out
 }
 
-// Contains returns true if the slice contains the given element.
-func Contains[S ~[]T, T comparable](s S, t T) bool {
-	return slices.Contains(s, t)
-}
-
 // Unique returns a new slice containing only the unique elements in the slice.
 func Unique[S ~[]T, T comparable](s S) []T {
 	if len(s) <= 1 {
@@ -106,15 +99,6 @@ func Equal[S ~[]T, T comparable](s1, s2 S) bool {
 		}
 	}
 	return true
-}
-
-// Reverse returns a new slice containing the elements of the slice in reverse order.
-func Reverse[S ~[]T, T any](s S) []T {
-	out := make([]T, len(s))
-	for i := range s {
-		out[len(s)-1-i] = s[i]
-	}
-	return out
 }
 
 // GroupBy returns a map of slices grouped by the given function.

@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/e2e-framework/support/kwok"
 
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
@@ -37,12 +37,12 @@ var (
 	updateTestdata = false
 	testEnv        env.Environment
 	pwd            = os.Getenv("PWD")
-	rootDir        = path.Join(pwd, "../../../..")
-	logsDir        = path.Join(rootDir, "logs")
+	rootDir        = utilspath.Join(pwd, "../../../..")
+	logsDir        = utilspath.Join(rootDir, "logs")
 	clusterName    = envconf.RandomName("kwok-e2e-docker", 24)
 	namespace      = envconf.RandomName("ns", 16)
 	testImage      = "localhost/kwok:test"
-	kwokctlPath    = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
+	kwokctlPath    = utilspath.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
 	baseArgs       = []string{
 		"--kwok-controller-image=" + testImage,
 		"--runtime=" + runtimeEnv,
@@ -52,7 +52,7 @@ var (
 )
 
 func init() {
-	_ = os.Setenv("KWOK_WORKDIR", path.Join(rootDir, "workdir"))
+	_ = os.Setenv("KWOK_WORKDIR", utilspath.Join(rootDir, "workdir"))
 	flag.BoolVar(&updateTestdata, "update-testdata", false, "update all of testdata")
 }
 
@@ -73,8 +73,8 @@ func TestMain(m *testing.M) {
 			"--kube-controller-manager-port=10260",
 			"--dashboard-port=6060",
 			"--jaeger-port=16686",
-			"--config="+path.Join(rootDir, "test/e2e"),
-			"--config="+path.Join(rootDir, "kustomize/metrics/usage"),
+			"--config="+utilspath.Join(rootDir, "test/e2e"),
+			"--config="+utilspath.Join(rootDir, "kustomize/metrics/usage"),
 		)...),
 		helper.CreateNamespace(namespace),
 	)

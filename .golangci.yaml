@@ -75,6 +75,18 @@ linters:
         alias: metav1
       - pkg: k8s.io/apimachinery/pkg/api/errors
         alias: apierrors
+      - pkg: sigs.k8s.io/kwok/pkg/utils/net
+        alias: utilsnet
+      - pkg:  sigs.k8s.io/kwok/pkg/utils/slices
+        alias: utilsslices
+      - pkg: sigs.k8s.io/kwok/pkg/utils/heap
+        alias: utilsheap
+      - pkg: sigs.k8s.io/kwok/pkg/utils/path
+        alias: utilspath
+      - pkg: sigs.k8s.io/kwok/pkg/utils/exec
+        alias: utilsexec
+      - pkg: sigs.k8s.io/kwok/pkg/utils/maps
+        alias: utilsmaps
       no-unaliased: true
     revive:
       rules:

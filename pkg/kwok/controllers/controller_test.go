@@ -33,7 +33,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
@@ -73,7 +73,7 @@ func TestController(t *testing.T) {
 
 	nodeInit, _ := config.UnmarshalWithType[*internalversion.Stage](nodefast.DefaultNodeInit)
 	nodeStages := []*internalversion.Stage{nodeInit}
-	podStages, _ := slices.MapWithError([]string{
+	podStages, _ := utilsslices.MapWithError([]string{
 		podfast.DefaultPodReady,
 		podfast.DefaultPodComplete,
 		podfast.DefaultPodDelete,

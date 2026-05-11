@@ -26,6 +26,8 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 )
 
 func Test_parseCIDR(t *testing.T) {
@@ -59,7 +61,7 @@ func Test_parseCIDR(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseCIDR(tt.args.s)
+			got, err := utilsnet.ParseCIDR(tt.args.s)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("parseCIDR() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -100,7 +102,7 @@ func Test_addIP(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := addIP(tt.args.ip, tt.args.add); !reflect.DeepEqual(got, tt.want) {
+			if got := utilsnet.AddIP(tt.args.ip, tt.args.add); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("addIP() = %v, want %v", got, tt.want)
 			}
 		})
@@ -109,7 +111,7 @@ func Test_addIP(t *testing.T) {
 
 func Test_ipPool_new(t *testing.T) {
 	testCIDR := "172.30.40.1/24"
-	netCIDR, _ := parseCIDR(testCIDR)
+	netCIDR, _ := utilsnet.ParseCIDR(testCIDR)
 	type fields struct {
 		cidr  *net.IPNet
 		index uint64

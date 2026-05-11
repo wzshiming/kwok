@@ -37,7 +37,8 @@ import (
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
 
@@ -169,7 +170,7 @@ func TestPodController(t *testing.T) {
 		return nodeInfo, true
 	}
 
-	podStages, _ := slices.MapWithError([]string{
+	podStages, _ := utilsslices.MapWithError([]string{
 		podfast.DefaultPodReady,
 		podfast.DefaultPodComplete,
 		podfast.DefaultPodDelete,
@@ -322,7 +323,7 @@ func TestPodController(t *testing.T) {
 							return false, fmt.Errorf("want pod %s podIP=%s, got %s", pod.Name, wantHostIP, pod.Status.PodIP)
 						}
 					} else {
-						cidr, _ := parseCIDR(wantPodCIRD)
+						cidr, _ := utilsnet.ParseCIDR(wantPodCIRD)
 						if !cidr.Contains(net.ParseIP(pod.Status.PodIP)) {
 							return false, fmt.Errorf("want pod %s podIP=%s in %s, got not", pod.Name, pod.Status.PodIP, wantPodCIRD)
 						}
@@ -359,7 +360,7 @@ func TestPodController(t *testing.T) {
 		t.Fatal(fmt.Errorf("pod1 status reason not custom"))
 	}
 
-	pod, ok := slices.Find(list.Items, func(pod corev1.Pod) bool {
+	pod, ok := utilsslices.Find(list.Items, func(pod corev1.Pod) bool {
 		return pod.Name == "pod0"
 	})
 	if !ok {

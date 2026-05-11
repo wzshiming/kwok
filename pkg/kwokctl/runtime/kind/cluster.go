@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -38,13 +39,13 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
-	"sigs.k8s.io/kwok/pkg/utils/net"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/sets"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/version"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
@@ -111,7 +112,7 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 	pkiPath := c.GetWorkdirPath(runtime.PkiName)
 	if !file.Exists(pkiPath) {
 		sans := []string{}
-		ips, err := net.GetAllIPs()
+		ips, err := utilsnet.GetAllIPs()
 		if err != nil {
 			logger := log.FromContext(ctx)
 			logger.Warn("failed to get all ips", "err", err)
@@ -142,7 +143,7 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 // https://github.com/kubernetes-sigs/kind/blob/7b017b2ce14a7fdea9d3ed2fa259c38c927e2dd1/pkg/internal/runtime/runtime.go
 func (c *Cluster) withProviderEnv(ctx context.Context) context.Context {
 	provider := c.runtime
-	ctx = exec.WithEnv(ctx, []string{
+	ctx = utilsexec.WithEnv(ctx, []string{
 		"KIND_EXPERIMENTAL_PROVIDER=" + provider,
 	})
 	return ctx
@@ -151,7 +152,7 @@ func (c *Cluster) withProviderEnv(ctx context.Context) context.Context {
 func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports ...*uint32) error {
 	for _, port := range ports {
 		if port != nil && *port == 0 {
-			p, err := net.GetUnusedPort(ctx, used)
+			p, err := utilsnet.GetUnusedPort(ctx, used)
 			if err != nil {
 				return err
 			}
@@ -209,9 +210,9 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	pkiPath := "/etc/kubernetes/pki"
 
 	workdir := c.Workdir()
-	caCertPath := path.Join(pkiPath, "ca.crt")
-	adminKeyPath := path.Join(pkiPath, "admin.key")
-	adminCertPath := path.Join(pkiPath, "admin.crt")
+	caCertPath := utilspath.Join(pkiPath, "ca.crt")
+	adminKeyPath := utilspath.Join(pkiPath, "admin.key")
+	adminCertPath := utilspath.Join(pkiPath, "admin.crt")
 
 	usedPorts := runtime.GetUsedPorts(ctx)
 	return &env{
@@ -559,7 +560,7 @@ func (c *Cluster) addKubectlProxy(ctx context.Context, env *env) (err error) {
 		ProjectName:    c.Name(),
 		Workdir:        env.workdir,
 		Image:          conf.KubectlImage,
-		BindAddress:    net.PublicAddress,
+		BindAddress:    utilsnet.PublicAddress,
 		Port:           conf.KubeApiserverInsecurePort,
 		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
 		CaCertPath:     env.caCertPath,
@@ -577,7 +578,7 @@ func (c *Cluster) addKubectlProxy(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to marshal kubectl proxy pod: %w", err)
 	}
-	err = c.WriteFile(path.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentKubeApiserverInsecureProxy+".yaml"), dashboardPod)
+	err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentKubeApiserverInsecureProxy+".yaml"), dashboardPod)
 	if err != nil {
 		return fmt.Errorf("failed to write: %w", err)
 	}
@@ -642,14 +643,14 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 	}
 
 	logVolumes := runtime.GetLogVolumes(ctx)
-	logVolumes = slices.Map(logVolumes, func(v internalversion.Volume) internalversion.Volume {
-		v.HostPath = path.Join("/var/components/controller", v.HostPath)
+	logVolumes = utilsslices.Map(logVolumes, func(v internalversion.Volume) internalversion.Volume {
+		v.HostPath = utilspath.Join("/var/components/controller", v.HostPath)
 		return v
 	})
 
 	otlpGrpcAddress := ""
 	if conf.JaegerPort != 0 {
-		otlpGrpcAddress = net.LocalAddress + ":4317"
+		otlpGrpcAddress = utilsnet.LocalAddress + ":4317"
 	}
 
 	kwokControllerComponent := components.BuildKwokControllerComponent(components.BuildKwokControllerComponentConfig{
@@ -658,7 +659,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 		Workdir:                           env.workdir,
 		Image:                             conf.KwokControllerImage,
 		Version:                           kwokControllerVersion,
-		BindAddress:                       net.PublicAddress,
+		BindAddress:                       utilsnet.PublicAddress,
 		Port:                              conf.KwokControllerPort,
 		ConfigPath:                        env.kwokConfigPath,
 		KubeconfigPath:                    env.inClusterOnHostKubeconfigPath,
@@ -690,7 +691,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to marshal kwok controller pod: %w", err)
 	}
-	err = c.WriteFile(path.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentKwokController+".yaml"), kwokControllerPod)
+	err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentKwokController+".yaml"), kwokControllerPod)
 	if err != nil {
 		return fmt.Errorf("failed to write: %w", err)
 	}
@@ -722,7 +723,7 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 		Workdir:        env.workdir,
 		Image:          conf.DashboardImage,
 		Version:        dashboardVersion,
-		BindAddress:    net.PublicAddress,
+		BindAddress:    utilsnet.PublicAddress,
 		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
 		CaCertPath:     env.caCertPath,
 		AdminCertPath:  env.adminCertPath,
@@ -741,7 +742,7 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to marshal dashboard pod: %w", err)
 	}
-	err = c.WriteFile(path.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentDashboard+".yaml"), dashboardPod)
+	err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentDashboard+".yaml"), dashboardPod)
 	if err != nil {
 		return fmt.Errorf("failed to write: %w", err)
 	}
@@ -769,7 +770,7 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 		if err != nil {
 			return fmt.Errorf("failed to marshal dashboard metrics scraper pod: %w", err)
 		}
-		err = c.WriteFile(path.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentDashboardMetricsScraper+".yaml"), dashboardMetricsScraperPod)
+		err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentDashboardMetricsScraper+".yaml"), dashboardMetricsScraperPod)
 		if err != nil {
 			return fmt.Errorf("failed to write: %w", err)
 		}
@@ -799,7 +800,7 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 		Workdir:        env.workdir,
 		Image:          conf.MetricsServerImage,
 		Version:        metricsServerVersion,
-		BindAddress:    net.PublicAddress,
+		BindAddress:    utilsnet.PublicAddress,
 		Port:           443,
 		CaCertPath:     env.caCertPath,
 		AdminCertPath:  env.adminCertPath,
@@ -815,7 +816,7 @@ func (c *Cluster) addMetricsServer(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to marshal metrics server pod: %w", err)
 	}
-	err = c.WriteFile(path.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentMetricsServer+".yaml"), metricsServerPod)
+	err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentMetricsServer+".yaml"), metricsServerPod)
 	if err != nil {
 		return fmt.Errorf("failed to write: %w", err)
 	}
@@ -866,7 +867,7 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 		Workdir:                      env.workdir,
 		Image:                        conf.PrometheusImage,
 		Version:                      prometheusVersion,
-		BindAddress:                  net.PublicAddress,
+		BindAddress:                  utilsnet.PublicAddress,
 		Port:                         9090,
 		ConfigPath:                   "/var/components/prometheus/etc/prometheus/prometheus.yaml",
 		AdminCertPath:                env.adminCertPath,
@@ -898,7 +899,7 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to marshal prometheus pod: %w", err)
 	}
-	err = c.WriteFile(path.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentPrometheus+".yaml"), prometheusPod)
+	err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentPrometheus+".yaml"), prometheusPod)
 	if err != nil {
 		return fmt.Errorf("failed to write: %w", err)
 	}
@@ -929,7 +930,7 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) (err error) {
 			Workdir:      env.workdir,
 			Image:        conf.JaegerImage,
 			Version:      jaegerVersion,
-			BindAddress:  net.PublicAddress,
+			BindAddress:  utilsnet.PublicAddress,
 			Port:         16686,
 			OtlpGrpcPort: 4317,
 			Verbosity:    env.verbosity,
@@ -944,7 +945,7 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) (err error) {
 		if err != nil {
 			return fmt.Errorf("failed to marshal jaeger pod: %w", err)
 		}
-		err = c.WriteFile(path.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentJaeger+".yaml"), jaegerPod)
+		err = c.WriteFile(utilspath.Join(c.GetWorkdirPath(runtime.ManifestsName), consts.ComponentJaeger+".yaml"), jaegerPod)
 		if err != nil {
 			return fmt.Errorf("failed to write: %w", err)
 		}
@@ -1036,7 +1037,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 		args = append(args, "--wait", "1m")
 	}
 
-	err = c.Exec(exec.WithAllWriteToErrOut(c.withProviderEnv(ctx)), kindPath, args...)
+	err = c.Exec(utilsexec.WithAllWriteToErrOut(c.withProviderEnv(ctx)), kindPath, args...)
 	if err != nil {
 		return err
 	}
@@ -1055,7 +1056,7 @@ func (c *Cluster) Up(ctx context.Context) error {
 	kubeconfigPath := c.GetWorkdirPath(runtime.InHostKubeconfigName)
 
 	kubeconfigBuf := bytes.NewBuffer(nil)
-	err = c.Kubectl(exec.WithWriteTo(ctx, kubeconfigBuf), "config", "view", "--minify=true", "--raw=true")
+	err = c.Kubectl(utilsexec.WithWriteTo(ctx, kubeconfigBuf), "config", "view", "--minify=true", "--raw=true")
 	if err != nil {
 		return err
 	}
@@ -1119,7 +1120,7 @@ func (c *Cluster) loadDockerImages(ctx context.Context, command string, kindClus
 func (c *Cluster) loadArchiveImages(ctx context.Context, command string, kindCluster string, images []string, runtime string, tmpDir string) error {
 	logger := log.FromContext(ctx)
 	for _, image := range images {
-		archive := path.Join(tmpDir, "image-archive", strings.ReplaceAll(image, ":", "/")+".tar")
+		archive := utilspath.Join(tmpDir, "image-archive", strings.ReplaceAll(image, ":", "/")+".tar")
 		err := c.MkdirAll(filepath.Dir(archive))
 		if err != nil {
 			return err
@@ -1241,7 +1242,7 @@ func (c *Cluster) Down(ctx context.Context) error {
 	}
 
 	logger := log.FromContext(ctx)
-	err = c.Exec(exec.WithAllWriteToErrOut(c.withProviderEnv(ctx)), kindPath, "delete", "cluster", "--name", c.Name())
+	err = c.Exec(utilsexec.WithAllWriteToErrOut(c.withProviderEnv(ctx)), kindPath, "delete", "cluster", "--name", c.Name())
 	if err != nil {
 		logger.Error("Failed to delete cluster", err)
 	}
@@ -1436,7 +1437,7 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 		}
 	}
 
-	err := c.Kubectl(exec.WithAllWriteTo(ctx, out), args...)
+	err := c.Kubectl(utilsexec.WithAllWriteTo(ctx, out), args...)
 	if err != nil {
 		return err
 	}
@@ -1457,7 +1458,7 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 	logger := log.FromContext(ctx)
 
-	kwokConfigPath := path.Join(dir, "kwok.yaml")
+	kwokConfigPath := utilspath.Join(dir, "kwok.yaml")
 	if file.Exists(kwokConfigPath) {
 		return fmt.Errorf("%s already exists", kwokConfigPath)
 	}
@@ -1477,7 +1478,7 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 		return err
 	}
 
-	componentsDir := path.Join(dir, "components")
+	componentsDir := utilspath.Join(dir, "components")
 	err = c.MkdirAll(componentsDir)
 	if err != nil {
 		return err
@@ -1488,14 +1489,14 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 		return err
 	}
 
-	infoPath := path.Join(dir, conf.Options.Runtime+"-info.txt")
+	infoPath := utilspath.Join(dir, conf.Options.Runtime+"-info.txt")
 	err = c.WriteToPath(c.withProviderEnv(ctx), infoPath, []string{kindPath, "version"})
 	if err != nil {
 		return err
 	}
 
 	for _, component := range conf.Components {
-		logPath := path.Join(componentsDir, component.Name+".log")
+		logPath := utilspath.Join(componentsDir, component.Name+".log")
 		f, err := c.OpenFile(logPath)
 		if err != nil {
 			logger.Error("Failed to open file", err)
@@ -1519,7 +1520,7 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 	}
 
 	if conf.Options.KubeAuditPolicy != "" {
-		filePath := path.Join(componentsDir, "audit.log")
+		filePath := utilspath.Join(componentsDir, "audit.log")
 		f, err := c.OpenFile(filePath)
 		if err != nil {
 			logger.Error("Failed to open file", err)
@@ -1576,7 +1577,7 @@ func (c *Cluster) EtcdctlInCluster(ctx context.Context, args ...string) error {
 		[]string{
 			"exec", "-i", "-n", "kube-system", etcdContainerName, "--",
 			"etcdctl",
-			"--endpoints=" + net.LocalAddress + ":2379",
+			"--endpoints=" + utilsnet.LocalAddress + ":2379",
 			"--cert=/etc/kubernetes/pki/etcd/server.crt",
 			"--key=/etc/kubernetes/pki/etcd/server.key",
 			"--cacert=/etc/kubernetes/pki/etcd/ca.crt",
@@ -1594,7 +1595,7 @@ func (c *Cluster) preDownloadKind(ctx context.Context) (string, error) {
 	}
 	conf := &config.Options
 
-	_, err = exec.LookPath("kind")
+	_, err = utilsexec.LookPath("kind")
 	if err != nil {
 		// kind does not exist, try to download it
 		kindPath, err := c.EnsureBinary(ctx, "kind", conf.KindBinary)
@@ -1614,7 +1615,7 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 		return err
 	}
 
-	_, enableMetricsServer := slices.Find(config.Components, func(c internalversion.Component) bool {
+	_, enableMetricsServer := utilsslices.Find(config.Components, func(c internalversion.Component) bool {
 		return c.Name == consts.ComponentMetricsServer
 	})
 	if c.IsDryRun() {

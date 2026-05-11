@@ -27,14 +27,14 @@ import (
 	"sigs.k8s.io/e2e-framework/support/kind"
 
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
 var (
 	testEnv     env.Environment
 	pwd         = os.Getenv("PWD")
-	rootDir     = path.Join(pwd, "../../../..")
+	rootDir     = utilspath.Join(pwd, "../../../..")
 	clusterName = envconf.RandomName("kwok-e2e", 16)
 	namespace   = envconf.RandomName("ns", 16)
 	testImage   = "localhost/kwok:test"
@@ -44,7 +44,7 @@ func TestMain(m *testing.M) {
 	testEnv = helper.Environment()
 
 	deploy := pwd
-	crs := path.Join(rootDir, "kustomize/stage/fast")
+	crs := utilspath.Join(rootDir, "kustomize/stage/fast")
 	testEnv.Setup(
 		helper.BuildKwokImage(rootDir, testImage, consts.RuntimeTypeDocker),
 		envfuncs.CreateCluster(kind.NewProvider(), clusterName),

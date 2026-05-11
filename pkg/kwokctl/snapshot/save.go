@@ -40,7 +40,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/recording"
 	"sigs.k8s.io/kwok/pkg/log"
 	"sigs.k8s.io/kwok/pkg/utils/client"
-	"sigs.k8s.io/kwok/pkg/utils/heap"
+	utilsheap "sigs.k8s.io/kwok/pkg/utils/heap"
 	"sigs.k8s.io/kwok/pkg/utils/patch"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
@@ -224,7 +224,7 @@ func (s *Saver) Record(ctx context.Context, encoder *yaml.Encoder, tracks map[*m
 		go s.buildResourcePatchWorker(ctx, w, que, patchMeta, gvr, startTime, track.Data)
 	}
 
-	h := heap.NewHeap[time.Duration, *recording.ResourcePatch]()
+	h := utilsheap.NewHeap[time.Duration, *recording.ResourcePatch]()
 	for ctx.Err() == nil {
 		resourcePatch, ok := que.GetOrWaitWithDone(ctx.Done())
 		if !ok {

@@ -23,6 +23,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -32,9 +33,9 @@ import (
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // PortForward handles a port forwarding request.
@@ -55,7 +56,7 @@ func (s *Server) PortForward(ctx context.Context, name string, uid types.UID, po
 	}
 
 	if len(forward.Command) > 0 {
-		return exec.Exec(exec.WithReadWriter(ctx, stream), forward.Command[0], forward.Command[1:]...)
+		return utilsexec.Exec(utilsexec.WithReadWriter(ctx, stream), forward.Command[0], forward.Command[1:]...)
 	}
 
 	if target := forward.Target; target != nil {
@@ -108,7 +109,7 @@ func (s *Server) getPortForward(req *restful.Request, resp *restful.Response) {
 }
 
 func getPodsForward(rules []*internalversion.PortForward, clusterRules []*internalversion.ClusterPortForward, podName, podNamespace string, port int32) (*internalversion.Forward, error) {
-	pf, has := slices.Find(rules, func(pf *internalversion.PortForward) bool {
+	pf, has := utilsslices.Find(rules, func(pf *internalversion.PortForward) bool {
 		return pf.Name == podName && pf.Namespace == podNamespace
 	})
 	if has {

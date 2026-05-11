@@ -37,7 +37,7 @@ import (
 	"sigs.k8s.io/kwok/pkg/config"
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
 
@@ -63,7 +63,7 @@ func TestStageCRs(t *testing.T) {
 			t.Fatalf("failed to list stage files: %v", err)
 		}
 
-		stageFiles = slices.Filter(stageFiles, func(f string) bool {
+		stageFiles = utilsslices.Filter(stageFiles, func(f string) bool {
 			return filepath.Base(f) != "kustomization.yaml"
 		})
 
@@ -120,7 +120,7 @@ func BenchmarkStageCRs(b *testing.B) {
 			b.Fatalf("failed to list stage files: %v", err)
 		}
 
-		stageFiles = slices.Filter(stageFiles, func(f string) bool {
+		stageFiles = utilsslices.Filter(stageFiles, func(f string) bool {
 			return filepath.Base(f) != "kustomization.yaml"
 		})
 
@@ -189,7 +189,7 @@ func Testing(ctx context.Context, resourceFile string, stageFile []string) (any,
 		meta["namespace"] = ns
 	}
 
-	stages = slices.Filter(stages, func(stage *internalversion.Stage) bool {
+	stages = utilsslices.Filter(stages, func(stage *internalversion.Stage) bool {
 		return stage.Spec.ResourceRef == want
 	})
 
@@ -261,7 +261,7 @@ func Benchmarking(ctx context.Context, resourceFile string, stageFile []string) 
 		Kind:     gvk.Kind,
 	}
 
-	stages = slices.Filter(stages, func(stage *internalversion.Stage) bool {
+	stages = utilsslices.Filter(stages, func(stage *internalversion.Stage) bool {
 		return stage.Spec.ResourceRef == want
 	})
 
@@ -369,7 +369,7 @@ func wrapFunction(name string) func(args ...any) any {
 
 		return fmt.Sprintf("<%s(%s)>", name,
 			strings.Join(
-				slices.Map(args,
+				utilsslices.Map(args,
 					func(arg any) string {
 						a := fmt.Sprintf("%#v", arg)
 						if a == "" {

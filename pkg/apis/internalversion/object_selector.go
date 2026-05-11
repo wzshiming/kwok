@@ -17,7 +17,7 @@ limitations under the License.
 package internalversion
 
 import (
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	"slices"
 )
 
 // ObjectSelector holds information how to match based on namespace and name.

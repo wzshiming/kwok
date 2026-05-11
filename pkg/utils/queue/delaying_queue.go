@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"sigs.k8s.io/kwok/pkg/utils/heap"
+	utilsheap "sigs.k8s.io/kwok/pkg/utils/heap"
 )
 
 // Clock is an interface that returns the current time and duration since a given time.
@@ -49,7 +49,7 @@ type delayingQueue[T comparable] struct {
 
 	clock Clock
 
-	heap *heap.Heap[int64, T]
+	heap *utilsheap.Heap[int64, T]
 
 	signal chan struct{}
 	mut    sync.Mutex
@@ -60,7 +60,7 @@ func NewDelayingQueue[T comparable](clock Clock) DelayingQueue[T] {
 	q := &delayingQueue[T]{
 		Queue:  NewQueue[T](),
 		clock:  clock,
-		heap:   heap.NewHeap[int64, T](),
+		heap:   utilsheap.NewHeap[int64, T](),
 		signal: make(chan struct{}, 1),
 	}
 	go q.loopWorker()

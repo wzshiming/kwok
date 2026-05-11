@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 func TestDecodeToUnstructured(t *testing.T) {
@@ -106,7 +106,7 @@ spec:
 }
 
 func objectListToUnstructuredList(objects []runtime.Object) []*unstructured.Unstructured {
-	return slices.Map(objects, objectToUnstructured)
+	return utilsslices.Map(objects, objectToUnstructured)
 }
 
 func objectToUnstructured(object runtime.Object) *unstructured.Unstructured {

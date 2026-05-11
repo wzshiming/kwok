@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/e2e-framework/support/kwok"
 
 	"sigs.k8s.io/kwok/pkg/consts"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
@@ -35,11 +35,11 @@ var (
 	runtimeEnv  = consts.RuntimeTypeBinary
 	testEnv     env.Environment
 	pwd         = os.Getenv("PWD")
-	rootDir     = path.Join(pwd, "../../../..")
-	logsDir     = path.Join(rootDir, "logs")
+	rootDir     = utilspath.Join(pwd, "../../../..")
+	logsDir     = utilspath.Join(rootDir, "logs")
 	clusterName = envconf.RandomName("kwok-e2e-benchmark", 24)
-	kwokPath    = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwok"+helper.BinSuffix)
-	kwokctlPath = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
+	kwokPath    = utilspath.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwok"+helper.BinSuffix)
+	kwokctlPath = utilspath.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
 	baseArgs    = []string{
 		"--kwok-controller-binary=" + kwokPath,
 		"--runtime=" + runtimeEnv,
@@ -50,7 +50,7 @@ var (
 )
 
 func init() {
-	_ = os.Setenv("KWOK_WORKDIR", path.Join(rootDir, "workdir"))
+	_ = os.Setenv("KWOK_WORKDIR", utilspath.Join(rootDir, "workdir"))
 }
 
 func TestMain(m *testing.M) {

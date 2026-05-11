@@ -36,7 +36,8 @@ import (
 	"sigs.k8s.io/kwok/pkg/utils/gotpl"
 	"sigs.k8s.io/kwok/pkg/utils/informer"
 	"sigs.k8s.io/kwok/pkg/utils/lifecycle"
-	"sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsmaps "sigs.k8s.io/kwok/pkg/utils/maps"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
 	"sigs.k8s.io/kwok/pkg/utils/queue"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 )
@@ -56,16 +57,16 @@ type PodController struct {
 	nodeIP                                string
 	defaultCIDR                           string
 	nodeGetFunc                           func(nodeName string) (*NodeInfo, bool)
-	ipPools                               maps.SyncMap[string, *ipPool]
+	ipPools                               utilsmaps.SyncMap[string, *ipPool]
 	renderer                              gotpl.Renderer
-	podsSets                              maps.SyncMap[log.ObjectRef, *PodInfo]
-	podsOnNode                            maps.SyncMap[string, *maps.SyncMap[log.ObjectRef, *PodInfo]]
+	podsSets                              utilsmaps.SyncMap[log.ObjectRef, *PodInfo]
+	podsOnNode                            utilsmaps.SyncMap[string, *utilsmaps.SyncMap[log.ObjectRef, *PodInfo]]
 	preprocessChan                        chan *corev1.Pod
 	playStageParallelism                  uint
 	lifecycle                             resources.Getter[lifecycle.Lifecycle]
 	delayQueue                            queue.WeightDelayingQueue[resourceStageJob[*corev1.Pod]]
 	backoff                               wait.Backoff
-	delayQueueMapping                     maps.SyncMap[string, resourceStageJob[*corev1.Pod]]
+	delayQueueMapping                     utilsmaps.SyncMap[string, resourceStageJob[*corev1.Pod]]
 	recorder                              record.EventRecorder
 	readOnlyFunc                          func(nodeName string) bool
 	enableMetrics                         bool
@@ -134,7 +135,7 @@ func NewPodController(conf PodControllerConfig) (*PodController, error) {
 		readOnlyFunc:                          conf.ReadOnlyFunc,
 		enableMetrics:                         conf.EnableMetrics,
 	}
-	funcMap := maps.Merge(gotpl.FuncMap{
+	funcMap := utilsmaps.Merge(gotpl.FuncMap{
 		"NodeIP":     c.funcNodeIP,
 		"PodIP":      c.funcPodIP,
 		"NodeIPWith": c.funcNodeIPWith,
@@ -487,7 +488,7 @@ func (c *PodController) ipPool(cidr string) (*ipPool, error) {
 	if ok {
 		return pool, nil
 	}
-	ipnet, err := parseCIDR(cidr)
+	ipnet, err := utilsnet.ParseCIDR(cidr)
 	if err != nil {
 		return nil, err
 	}
@@ -625,7 +626,7 @@ func (c *PodController) putPodInfo(pod *corev1.Pod) {
 	c.podsSets.Store(key, podInfo)
 	m, ok := c.podsOnNode.Load(pod.Spec.NodeName)
 	if !ok {
-		m = &maps.SyncMap[log.ObjectRef, *PodInfo]{}
+		m = &utilsmaps.SyncMap[log.ObjectRef, *PodInfo]{}
 		c.podsOnNode.Store(pod.Spec.NodeName, m)
 	}
 	m.Store(key, podInfo)

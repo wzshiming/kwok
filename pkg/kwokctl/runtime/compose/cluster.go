@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"time"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
@@ -33,14 +34,14 @@ import (
 	"sigs.k8s.io/kwok/pkg/kwokctl/runtime"
 	"sigs.k8s.io/kwok/pkg/kwokctl/snapshot"
 	"sigs.k8s.io/kwok/pkg/log"
-	"sigs.k8s.io/kwok/pkg/utils/exec"
+	utilsexec "sigs.k8s.io/kwok/pkg/utils/exec"
 	"sigs.k8s.io/kwok/pkg/utils/file"
 	"sigs.k8s.io/kwok/pkg/utils/format"
 	"sigs.k8s.io/kwok/pkg/utils/kubeconfig"
-	"sigs.k8s.io/kwok/pkg/utils/net"
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilsnet "sigs.k8s.io/kwok/pkg/utils/net"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/pkg/utils/sets"
-	"sigs.k8s.io/kwok/pkg/utils/slices"
+	utilsslices "sigs.k8s.io/kwok/pkg/utils/slices"
 	"sigs.k8s.io/kwok/pkg/utils/wait"
 	"sigs.k8s.io/kwok/pkg/utils/yaml"
 )
@@ -113,7 +114,7 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 			c.Name() + "-kube-apiserver",
 			c.Name() + "-kwok-controller",
 		}
-		ips, err := net.GetAllIPs()
+		ips, err := utilsnet.GetAllIPs()
 		if err != nil {
 			logger := log.FromContext(ctx)
 			logger.Warn("failed to get all ips", "err", err)
@@ -161,7 +162,7 @@ func (c *Cluster) setup(ctx context.Context, env *env) error {
 func (c *Cluster) setupPorts(ctx context.Context, used sets.Sets[uint32], ports ...*uint32) error {
 	for _, port := range ports {
 		if port != nil && *port == 0 {
-			p, err := net.GetUnusedPort(ctx, used)
+			p, err := utilsnet.GetUnusedPort(ctx, used)
 			if err != nil {
 				return err
 			}
@@ -221,13 +222,13 @@ func (c *Cluster) env(ctx context.Context) (*env, error) {
 	}
 
 	workdir := c.Workdir()
-	caCertPath := path.Join(pkiPath, "ca.crt")
-	adminKeyPath := path.Join(pkiPath, "admin.key")
-	adminCertPath := path.Join(pkiPath, "admin.crt")
+	caCertPath := utilspath.Join(pkiPath, "ca.crt")
+	adminKeyPath := utilspath.Join(pkiPath, "admin.key")
+	adminCertPath := utilspath.Join(pkiPath, "admin.crt")
 	inClusterPkiPath := "/etc/kubernetes/pki/"
-	inClusterCaCertPath := path.Join(inClusterPkiPath, "ca.crt")
-	inClusterAdminKeyPath := path.Join(inClusterPkiPath, "admin.key")
-	inClusterAdminCertPath := path.Join(inClusterPkiPath, "admin.crt")
+	inClusterCaCertPath := utilspath.Join(inClusterPkiPath, "ca.crt")
+	inClusterAdminKeyPath := utilspath.Join(inClusterPkiPath, "admin.key")
+	inClusterAdminCertPath := utilspath.Join(inClusterPkiPath, "admin.crt")
 
 	inClusterPort := uint32(8080)
 	scheme := "http"
@@ -399,7 +400,7 @@ func (c *Cluster) addEtcd(ctx context.Context, env *env) (err error) {
 		Workdir:          env.workdir,
 		Image:            conf.EtcdImage,
 		Version:          etcdVersion,
-		BindAddress:      net.PublicAddress,
+		BindAddress:      utilsnet.PublicAddress,
 		Port:             conf.EtcdPort,
 		DataPath:         env.etcdDataPath,
 		Verbosity:        env.verbosity,
@@ -448,7 +449,7 @@ func (c *Cluster) addKubeApiserver(ctx context.Context, env *env) (err error) {
 		Workdir:           env.workdir,
 		Image:             conf.KubeApiserverImage,
 		Version:           kubeApiserverVersion,
-		BindAddress:       net.PublicAddress,
+		BindAddress:       utilsnet.PublicAddress,
 		Port:              conf.KubeApiserverPort,
 		KubeRuntimeConfig: conf.KubeRuntimeConfig,
 		KubeFeatureGates:  conf.KubeFeatureGates,
@@ -492,7 +493,7 @@ func (c *Cluster) addKubectlProxy(ctx context.Context, env *env) (err error) {
 		ProjectName:    c.Name(),
 		Workdir:        env.workdir,
 		Image:          conf.KubectlImage,
-		BindAddress:    net.PublicAddress,
+		BindAddress:    utilsnet.PublicAddress,
 		Port:           conf.KubeApiserverInsecurePort,
 		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
 		CaCertPath:     env.caCertPath,
@@ -530,7 +531,7 @@ func (c *Cluster) addKubeControllerManager(ctx context.Context, env *env) (err e
 		Workdir:                            env.workdir,
 		Image:                              conf.KubeControllerManagerImage,
 		Version:                            kubeControllerManagerVersion,
-		BindAddress:                        net.PublicAddress,
+		BindAddress:                        utilsnet.PublicAddress,
 		Port:                               conf.KubeControllerManagerPort,
 		SecurePort:                         conf.SecurePort,
 		CaCertPath:                         env.caCertPath,
@@ -583,7 +584,7 @@ func (c *Cluster) addKubeScheduler(ctx context.Context, env *env) (err error) {
 		Workdir:          env.workdir,
 		Image:            conf.KubeSchedulerImage,
 		Version:          kubeSchedulerVersion,
-		BindAddress:      net.PublicAddress,
+		BindAddress:      utilsnet.PublicAddress,
 		Port:             conf.KubeSchedulerPort,
 		SecurePort:       conf.SecurePort,
 		CaCertPath:       env.caCertPath,
@@ -633,7 +634,7 @@ func (c *Cluster) addKwokController(ctx context.Context, env *env) (err error) {
 		Workdir:                  env.workdir,
 		Image:                    conf.KwokControllerImage,
 		Version:                  kwokControllerVersion,
-		BindAddress:              net.PublicAddress,
+		BindAddress:              utilsnet.PublicAddress,
 		Port:                     conf.KwokControllerPort,
 		ConfigPath:               env.kwokConfigPath,
 		KubeconfigPath:           env.inClusterOnHostKubeconfigPath,
@@ -738,7 +739,7 @@ func (c *Cluster) addPrometheus(ctx context.Context, env *env) (err error) {
 		Workdir:                      env.workdir,
 		Image:                        conf.PrometheusImage,
 		Version:                      prometheusVersion,
-		BindAddress:                  net.PublicAddress,
+		BindAddress:                  utilsnet.PublicAddress,
 		Port:                         conf.PrometheusPort,
 		ConfigPath:                   prometheusConfigPath,
 		AdminCertPath:                env.adminCertPath,
@@ -777,7 +778,7 @@ func (c *Cluster) addDashboard(ctx context.Context, env *env) (err error) {
 		Workdir:        env.workdir,
 		Image:          conf.DashboardImage,
 		Version:        dashboardVersion,
-		BindAddress:    net.PublicAddress,
+		BindAddress:    utilsnet.PublicAddress,
 		KubeconfigPath: env.inClusterOnHostKubeconfigPath,
 		CaCertPath:     env.caCertPath,
 		AdminCertPath:  env.adminCertPath,
@@ -836,7 +837,7 @@ func (c *Cluster) addJaeger(ctx context.Context, env *env) (err error) {
 		Workdir:      env.workdir,
 		Image:        conf.JaegerImage,
 		Version:      jaegerVersion,
-		BindAddress:  net.PublicAddress,
+		BindAddress:  utilsnet.PublicAddress,
 		Port:         conf.JaegerPort,
 		OtlpGrpcPort: conf.JaegerOtlpGrpcPort,
 		Verbosity:    env.verbosity,
@@ -881,7 +882,7 @@ func (c *Cluster) addKueue(ctx context.Context, env *env) (err error) {
 		Workdir:           env.workdir,
 		Image:             conf.KueueImage,
 		Version:           kueueVersion,
-		BindAddress:       net.PublicAddress,
+		BindAddress:       utilsnet.PublicAddress,
 		Port:              conf.MetricsServerPort,
 		CaCertPath:        env.caCertPath,
 		AdminCertPath:     env.adminCertPath,
@@ -989,7 +990,7 @@ func (c *Cluster) addJobSet(ctx context.Context, env *env) (err error) {
 		Workdir:        env.workdir,
 		Image:          conf.JobSetImage,
 		Version:        jobsetVersion,
-		BindAddress:    net.PublicAddress,
+		BindAddress:    utilsnet.PublicAddress,
 		CaCertPath:     env.caCertPath,
 		AdminCertPath:  env.adminCertPath,
 		AdminKeyPath:   env.adminKeyPath,
@@ -1030,7 +1031,7 @@ func (c *Cluster) finishInstall(ctx context.Context, env *env) error {
 	kubeconfigData, err := kubeconfig.EncodeKubeconfig(kubeconfig.BuildKubeconfig(kubeconfig.BuildKubeconfigConfig{
 		ProjectName:  c.Name(),
 		SecurePort:   conf.SecurePort,
-		Address:      env.scheme + "://" + net.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
+		Address:      env.scheme + "://" + utilsnet.LocalAddress + ":" + format.String(conf.KubeApiserverPort),
 		CACrtPath:    env.caCertPath,
 		AdminCrtPath: env.adminCertPath,
 		AdminKeyPath: env.adminKeyPath,
@@ -1238,7 +1239,7 @@ func (c *Cluster) logs(ctx context.Context, name string, out io.Writer, follow b
 		}
 	}
 
-	err := c.Exec(exec.WithAllWriteTo(ctx, out), c.runtime, args...)
+	err := c.Exec(utilsexec.WithAllWriteTo(ctx, out), c.runtime, args...)
 	if err != nil {
 		return err
 	}
@@ -1259,7 +1260,7 @@ func (c *Cluster) LogsFollow(ctx context.Context, name string, out io.Writer) er
 func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 	logger := log.FromContext(ctx)
 
-	kwokConfigPath := path.Join(dir, "kwok.yaml")
+	kwokConfigPath := utilspath.Join(dir, "kwok.yaml")
 	if file.Exists(kwokConfigPath) {
 		return fmt.Errorf("%s already exists", kwokConfigPath)
 	}
@@ -1279,20 +1280,20 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 		return err
 	}
 
-	componentsDir := path.Join(dir, "components")
+	componentsDir := utilspath.Join(dir, "components")
 	err = c.MkdirAll(componentsDir)
 	if err != nil {
 		return err
 	}
 
-	infoPath := path.Join(dir, c.runtime+"-info.txt")
+	infoPath := utilspath.Join(dir, c.runtime+"-info.txt")
 	err = c.WriteToPath(ctx, infoPath, []string{c.runtime, "info"})
 	if err != nil {
 		return err
 	}
 
 	for _, component := range conf.Components {
-		logPath := path.Join(componentsDir, component.Name+".log")
+		logPath := utilspath.Join(componentsDir, component.Name+".log")
 		f, err := c.OpenFile(logPath)
 		if err != nil {
 			logger.Error("Failed to open file", err)
@@ -1316,7 +1317,7 @@ func (c *Cluster) CollectLogs(ctx context.Context, dir string) error {
 	}
 
 	if conf.Options.KubeAuditPolicy != "" {
-		filePath := path.Join(componentsDir, "audit.log")
+		filePath := utilspath.Join(componentsDir, "audit.log")
 		f, err := c.OpenFile(filePath)
 		if err != nil {
 			logger.Error("Failed to open file", err)
@@ -1448,15 +1449,15 @@ func (c *Cluster) InitCRs(ctx context.Context) error {
 		return err
 	}
 
-	_, enableMetricsServer := slices.Find(config.Components, func(c internalversion.Component) bool {
+	_, enableMetricsServer := utilsslices.Find(config.Components, func(c internalversion.Component) bool {
 		return c.Name == consts.ComponentMetricsServer
 	})
 
-	_, enableKueue := slices.Find(config.Components, func(c internalversion.Component) bool {
+	_, enableKueue := utilsslices.Find(config.Components, func(c internalversion.Component) bool {
 		return c.Name == consts.ComponentKueue
 	})
 
-	_, enableJobSet := slices.Find(config.Components, func(c internalversion.Component) bool {
+	_, enableJobSet := utilsslices.Find(config.Components, func(c internalversion.Component) bool {
 		return c.Name == consts.ComponentJobSet
 	})
 

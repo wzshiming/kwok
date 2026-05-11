@@ -19,12 +19,11 @@ package yaml
 import (
 	"errors"
 	"io"
+	"slices"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/yaml" //nolint:depguard
-
-	"sigs.k8s.io/kwok/pkg/utils/slices"
 )
 
 // Decoder is a YAML decoder.

@@ -16,7 +16,9 @@ limitations under the License.
 
 package maps
 
-import "maps"
+import (
+	"maps"
+)
 
 // Keys returns the keys of the map m.
 // The keys will be in an indeterminate order.

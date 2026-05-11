@@ -27,22 +27,22 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/support/kwok"
 
-	"sigs.k8s.io/kwok/pkg/utils/path"
+	utilspath "sigs.k8s.io/kwok/pkg/utils/path"
 	"sigs.k8s.io/kwok/test/e2e/helper"
 )
 
 var (
 	testEnv        env.Environment
 	pwd            = os.Getenv("PWD")
-	rootDir        = path.Join(pwd, "../../../..")
-	logsDir        = path.Join(rootDir, "logs")
+	rootDir        = utilspath.Join(pwd, "../../../..")
+	logsDir        = utilspath.Join(rootDir, "logs")
 	clusterName    = envconf.RandomName("kwok-e2e-dryrun", 24)
-	kwokctlPath    = path.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
+	kwokctlPath    = utilspath.Join(rootDir, "bin", runtime.GOOS, runtime.GOARCH, "kwokctl"+helper.BinSuffix)
 	updateTestdata = false
 )
 
 func init() {
-	_ = os.Setenv("KWOK_WORKDIR", path.Join(rootDir, "workdir"))
+	_ = os.Setenv("KWOK_WORKDIR", utilspath.Join(rootDir, "workdir"))
 	flag.BoolVar(&updateTestdata, "update-testdata", false, "update all of testdata")
 }
 
