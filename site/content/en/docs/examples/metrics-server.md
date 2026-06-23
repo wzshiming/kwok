@@ -6,16 +6,10 @@ title: "Metrics Server"
 
 More information about an be found at [Metrics] and [ResourceUsage].
 
-## Fetch default metrics usage
-
-``` bash
-wget https://github.com/kubernetes-sigs/kwok/releases/download/v0.5.1/metrics-usage.yaml
-```
-
 ## Set up Cluster
 
 ``` bash
-kwokctl create cluster --enable-metrics-server -c metrics-usage.yaml
+kwokctl create cluster --enable metrics-server
 ```
 
 ## Create Node and Pod
