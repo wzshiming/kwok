@@ -23,7 +23,7 @@ function main() {
     name="test-kwokctl-podgroup-${release}"
 
     kwokctl create cluster --name "${name}" \
-      --runtime=docker --enable scheduler-plugins \
+      --enable scheduler-plugins \
       --kube-scheduler-config "${DIR}/podgroup-scheduler-config.yaml"
 
     kwokctl scale node --replicas 2 --name "${name}"

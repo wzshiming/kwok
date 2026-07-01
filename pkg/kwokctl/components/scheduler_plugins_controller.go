@@ -17,8 +17,6 @@ limitations under the License.
 package components
 
 import (
-	"fmt"
-
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
 	"sigs.k8s.io/kwok/pkg/utils/version"
@@ -27,6 +25,7 @@ import (
 // BuildSchedulerPluginsControllerComponentConfig is the configuration for building the scheduler-plugins controller component.
 type BuildSchedulerPluginsControllerComponentConfig struct {
 	Runtime        string
+	Binary         string
 	Image          string
 	RawManifests   []string
 	Version        version.Version
@@ -39,43 +38,46 @@ type BuildSchedulerPluginsControllerComponentConfig struct {
 
 // BuildSchedulerPluginsControllerComponent builds the scheduler-plugins controller component.
 func BuildSchedulerPluginsControllerComponent(conf BuildSchedulerPluginsControllerComponentConfig) (component internalversion.Component, err error) {
-	if GetRuntimeMode(conf.Runtime) != RuntimeModeContainer {
-		return internalversion.Component{}, fmt.Errorf("scheduler-plugins only supports container runtime for now")
-	}
-
 	var args []string
 	var volumes []internalversion.Volume
 
-	volumes = append(volumes,
-		internalversion.Volume{
-			HostPath:  conf.KubeconfigPath,
-			MountPath: kubeconfigPath,
-			ReadOnly:  true,
-		},
-		internalversion.Volume{
-			HostPath:  conf.CaCertPath,
-			MountPath: pkiCACertPath,
-			ReadOnly:  true,
-		},
-		internalversion.Volume{
-			HostPath:  conf.AdminCertPath,
-			MountPath: pkiAdminCertPath,
-			ReadOnly:  true,
-		},
-		internalversion.Volume{
-			HostPath:  conf.AdminKeyPath,
-			MountPath: pkiAdminKeyPath,
-			ReadOnly:  true,
-		},
-	)
+	if GetRuntimeMode(conf.Runtime) != RuntimeModeNative {
+		volumes = append(volumes,
+			internalversion.Volume{
+				HostPath:  conf.KubeconfigPath,
+				MountPath: kubeconfigPath,
+				ReadOnly:  true,
+			},
+			internalversion.Volume{
+				HostPath:  conf.CaCertPath,
+				MountPath: pkiCACertPath,
+				ReadOnly:  true,
+			},
+			internalversion.Volume{
+				HostPath:  conf.AdminCertPath,
+				MountPath: pkiAdminCertPath,
+				ReadOnly:  true,
+			},
+			internalversion.Volume{
+				HostPath:  conf.AdminKeyPath,
+				MountPath: pkiAdminKeyPath,
+				ReadOnly:  true,
+			},
+		)
 
-	args = append(args,
-		"--kubeconfig="+kubeconfigPath,
-	)
+		args = append(args,
+			"--kubeconfig="+kubeconfigPath,
+		)
+	} else {
+		args = append(args,
+			"--kubeconfig="+conf.KubeconfigPath,
+		)
+	}
 
 	component = internalversion.Component{
-		Name:  consts.ComponentSchedulerPlugins,
-		Image: conf.Image,
+		Name:   consts.ComponentSchedulerPlugins,
+		Binary: conf.Binary,
+		Image:  conf.Image,
 		Links: []string{
 			consts.ComponentKubeApiserver,
 		},
