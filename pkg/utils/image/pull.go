@@ -92,9 +92,9 @@ func Pull(ctx context.Context, cacheDir, src, dest string, quiet bool) error {
 		img = cache.Image(img, cache.NewFilesystemCache(cacheDir))
 	}
 
-	err = crane.Save(img, src, dest)
+	err = writeArchive(img, ref, dest)
 	if err != nil {
-		return fmt.Errorf("saving tarball %s: %w", dest, err)
+		return fmt.Errorf("saving archive %s: %w", dest, err)
 	}
 
 	return nil

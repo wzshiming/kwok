@@ -545,41 +545,76 @@ KIND_EXPERIMENTAL_PROVIDER=docker \
   docker.io/kindest/node:v1.37.0 \
   --wait \
   29m
-KIND_EXPERIMENTAL_PROVIDER=docker \
-  kind \
-  load \
-  docker-image \
+mkdir -p <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kubectl
+docker \
+  save \
   registry.k8s.io/kubectl:v1.37.0 \
-  --name \
-  kwok-<CLUSTER_NAME>
+  -o \
+  <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kubectl/v1.37.0.tar
 KIND_EXPERIMENTAL_PROVIDER=docker \
   kind \
   load \
-  docker-image \
+  image-archive \
+  <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kubectl/v1.37.0.tar \
+  --name \
+  kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kubectl/v1.37.0.tar
+mkdir -p <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok
+docker \
+  save \
   registry.k8s.io/kwok/kwok:v0.9.0 \
-  --name \
-  kwok-<CLUSTER_NAME>
+  -o \
+  <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.9.0.tar
 KIND_EXPERIMENTAL_PROVIDER=docker \
   kind \
   load \
-  docker-image \
+  image-archive \
+  <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.9.0.tar \
+  --name \
+  kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.9.0.tar
+mkdir -p <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server
+docker \
+  save \
   registry.k8s.io/metrics-server/metrics-server:v0.8.1 \
-  --name \
-  kwok-<CLUSTER_NAME>
+  -o \
+  <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server/v0.8.1.tar
 KIND_EXPERIMENTAL_PROVIDER=docker \
   kind \
   load \
-  docker-image \
+  image-archive \
+  <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server/v0.8.1.tar \
+  --name \
+  kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/metrics-server/metrics-server/v0.8.1.tar
+mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus
+docker \
+  save \
   docker.io/prom/prometheus:v3.12.0 \
-  --name \
-  kwok-<CLUSTER_NAME>
+  -o \
+  <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.12.0.tar
 KIND_EXPERIMENTAL_PROVIDER=docker \
   kind \
   load \
-  docker-image \
-  docker.io/jaegertracing/all-in-one:1.76.0 \
+  image-archive \
+  <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.12.0.tar \
   --name \
   kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.12.0.tar
+mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/jaegertracing/all-in-one
+docker \
+  save \
+  docker.io/jaegertracing/all-in-one:1.76.0 \
+  -o \
+  <ROOT_DIR>/workdir/cache/image-archive/docker.io/jaegertracing/all-in-one/1.76.0.tar
+KIND_EXPERIMENTAL_PROVIDER=docker \
+  kind \
+  load \
+  image-archive \
+  <ROOT_DIR>/workdir/cache/image-archive/docker.io/jaegertracing/all-in-one/1.76.0.tar \
+  --name \
+  kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/jaegertracing/all-in-one/1.76.0.tar
 kubectl \
   config \
   view \

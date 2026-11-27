@@ -340,20 +340,34 @@ KIND_EXPERIMENTAL_PROVIDER=docker \
   docker.io/kindest/node:v1.37.0 \
   --wait \
   29m
-KIND_EXPERIMENTAL_PROVIDER=docker \
-  kind \
-  load \
-  docker-image \
+mkdir -p <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok
+docker \
+  save \
   registry.k8s.io/kwok/kwok:v0.9.0 \
-  --name \
-  kwok-<CLUSTER_NAME>
+  -o \
+  <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.9.0.tar
 KIND_EXPERIMENTAL_PROVIDER=docker \
   kind \
   load \
-  docker-image \
-  docker.io/prom/prometheus:v3.12.0 \
+  image-archive \
+  <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.9.0.tar \
   --name \
   kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/registry.k8s.io/kwok/kwok/v0.9.0.tar
+mkdir -p <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus
+docker \
+  save \
+  docker.io/prom/prometheus:v3.12.0 \
+  -o \
+  <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.12.0.tar
+KIND_EXPERIMENTAL_PROVIDER=docker \
+  kind \
+  load \
+  image-archive \
+  <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.12.0.tar \
+  --name \
+  kwok-<CLUSTER_NAME>
+rm <ROOT_DIR>/workdir/cache/image-archive/docker.io/prom/prometheus/v3.12.0.tar
 kubectl \
   config \
   view \
