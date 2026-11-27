@@ -276,16 +276,27 @@ func (c *Cluster) listAllImages(ctx context.Context) ([]string, error) {
 	return images, nil
 }
 
-// imageSaveArgs returns the arguments to save the image to the archive with the runtime.
-func imageSaveArgs(runtime string, image string, archive string) []string {
-	if runtime == consts.RuntimeTypePodman {
-		// podman saves a docker archive by default
-		return []string{"save", "--format", "oci-archive", image, "-o", archive}
+// loadDockerImages loads docker images into the cluster.
+// `kind load docker-image`
+func (c *Cluster) loadDockerImages(ctx context.Context, command string, kindCluster string, images []string) error {
+	logger := log.FromContext(ctx)
+	for _, image := range images {
+		err := c.Exec(c.withProviderEnv(ctx),
+			command, "load", "docker-image",
+			image,
+			"--name", kindCluster,
+		)
+		if err != nil {
+			return err
+		}
+		logger.Info("Loaded image",
+			"image", image,
+		)
 	}
-	return []string{"save", image, "-o", archive}
+	return nil
 }
 
-// loadArchiveImages saves the images from the runtime and loads them into the cluster.
+// loadArchiveImages loads docker images into the cluster.
 // `kind load image-archive`
 func (c *Cluster) loadArchiveImages(ctx context.Context, command string, kindCluster string, images []string, runtime string, tmpDir string) error {
 	logger := log.FromContext(ctx)
@@ -296,7 +307,7 @@ func (c *Cluster) loadArchiveImages(ctx context.Context, command string, kindClu
 			return err
 		}
 
-		err = c.Exec(ctx, runtime, imageSaveArgs(runtime, image, archive)...)
+		err = c.Exec(ctx, runtime, "save", image, "-o", archive)
 		if err != nil {
 			return err
 		}
@@ -320,7 +331,16 @@ func (c *Cluster) loadArchiveImages(ctx context.Context, command string, kindClu
 }
 
 func (c *Cluster) loadImages(ctx context.Context, kindPath string, images []string, cacheDir string) error {
-	return c.loadArchiveImages(ctx, kindPath, c.Name(), images, c.runtime, cacheDir)
+	var err error
+	if c.runtime == consts.RuntimeTypeDocker {
+		err = c.loadDockerImages(ctx, kindPath, c.Name(), images)
+	} else {
+		err = c.loadArchiveImages(ctx, kindPath, c.Name(), images, c.runtime, cacheDir)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *Cluster) getClusterName() string {
