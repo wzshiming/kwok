@@ -24,6 +24,7 @@ import (
 	execlocal "sigs.k8s.io/kwok/kustomize/exec/local"
 	"sigs.k8s.io/kwok/kustomize/metrics/resource"
 	"sigs.k8s.io/kwok/kustomize/metrics/usage"
+	portforwardlocal "sigs.k8s.io/kwok/kustomize/port-forward/local"
 	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
 	nodeheartbeat "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat"
 	nodeheartbeatwithlease "sigs.k8s.io/kwok/kustomize/stage/node/heartbeat-with-lease"
@@ -289,8 +290,22 @@ func (c *Cluster) Save(ctx context.Context) error {
 	}
 
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ClusterPortForwardKind) {
-		stages := config.FilterWithTypeFromContext[*internalversion.ClusterPortForward](ctx)
-		objs = appendIntoInternalObjects(objs, stages...)
+		clusterPortForwards := config.FilterWithTypeFromContext[*internalversion.ClusterPortForward](ctx)
+		if len(clusterPortForwards) != 0 {
+			objs = appendIntoInternalObjects(objs, clusterPortForwards...)
+		} else {
+			// kwok listens on a fixed port in its own container,
+			// but shares the host with the binary runtime.
+			var kwokControllerPort uint32
+			if conf.Options.Runtime == consts.RuntimeTypeBinary {
+				kwokControllerPort = conf.Options.KwokControllerPort
+			}
+			pf, err := getDefaultClusterPortForward(kwokControllerPort)
+			if err != nil {
+				return err
+			}
+			objs = appendIntoInternalObjects(objs, pf)
+		}
 	}
 
 	return config.Save(ctx, c.GetWorkdirPath(ConfigName), objs)
@@ -349,6 +364,23 @@ func getDefaultPodStages() ([]config.InternalObject, error) {
 
 func getDefaultClusterExec() (*internalversion.ClusterExec, error) {
 	return config.UnmarshalWithType[*internalversion.ClusterExec, string](execlocal.DefaultClusterExecLocal)
+}
+
+// getDefaultClusterPortForward returns the default ClusterPortForward that forwards to kwok itself,
+// kwokControllerPort overrides the port kwok listens on if it is not zero.
+func getDefaultClusterPortForward(kwokControllerPort uint32) (*internalversion.ClusterPortForward, error) {
+	pf, err := config.UnmarshalWithType[*internalversion.ClusterPortForward, string](portforwardlocal.DefaultClusterPortForwardLocal)
+	if err != nil {
+		return nil, err
+	}
+	if kwokControllerPort != 0 {
+		for i := range pf.Spec.Forwards {
+			if target := pf.Spec.Forwards[i].Target; target != nil {
+				target.Port = int32(kwokControllerPort)
+			}
+		}
+	}
+	return pf, nil
 }
 
 // GetComponent returns the component by name

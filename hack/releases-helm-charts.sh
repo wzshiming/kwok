@@ -90,3 +90,4 @@ package_and_index "${index_dir}" "${chart_dir}/kwok" "kwok-chart" || :
 package_and_index "${index_dir}" "${chart_dir}/stage-fast" "kwok-stage-fast-chart" || :
 package_and_index "${index_dir}" "${chart_dir}/metrics-usage" "kwok-metrics-usage-chart" || :
 package_and_index "${index_dir}" "${chart_dir}/exec-local" "kwok-exec-local-chart" || :
+package_and_index "${index_dir}" "${chart_dir}/port-forward-local" "kwok-port-forward-local-chart" || :

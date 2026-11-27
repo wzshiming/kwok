@@ -34,3 +34,9 @@ Set up default exec policy (optional)
 ```shell
 helm upgrade --install kwok kwok/exec-local
 ```
+
+Set up default port forward policy (optional)
+
+```shell
+helm upgrade --install kwok kwok/port-forward-local
+```

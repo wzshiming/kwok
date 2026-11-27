@@ -78,6 +78,17 @@ kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATES
 There is no real container behind a fake pod, so the command is executed inside the `kwok-controller` container.
 The configuration is available at [here][exec-local], and for more complex exec simulation, please refer to [Exec configuration].
 
+### Set up default custom resources (CRs) of port forward (optional)
+
+This allows to run `kubectl port-forward` on the pods managed by `kwok`.
+
+``` bash 
+kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/port-forward-local.yaml"
+```
+
+There is no real container behind a fake pod, so every port of the pod is forwarded to the server of `kwok` itself.
+The configuration is available at [here][port-forward-local], and for more complex port forward simulation, please refer to [PortForward configuration].
+
 ## Next steps
 
 Now, you can use `kwok` to [manage nodes and pods] in the Kubernetes cluster.
@@ -89,3 +100,5 @@ Now, you can use `kwok` to [manage nodes and pods] in the Kubernetes cluster.
 [ResourceUsage configuration]: {{< relref "/docs/user/resource-usage-configuration" >}}
 [exec-local]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/exec/local
 [Exec configuration]: {{< relref "/docs/user/exec-configuration" >}}
+[port-forward-local]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/port-forward/local
+[PortForward configuration]: {{< relref "/docs/user/port-forward-configuration" >}}

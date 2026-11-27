@@ -57,3 +57,28 @@ func TestGetDefaultClusterExec(t *testing.T) {
 		t.Fatalf("expected a local exec for all containers, got %+v", execs)
 	}
 }
+
+func TestGetDefaultClusterPortForward(t *testing.T) {
+	pf, err := getDefaultClusterPortForward(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pf.Spec.Selector != nil {
+		t.Fatalf("expected to match all pods, got selector %+v", pf.Spec.Selector)
+	}
+	forwards := pf.Spec.Forwards
+	if len(forwards) != 1 || len(forwards[0].Ports) != 0 || forwards[0].Target == nil {
+		t.Fatalf("expected a target for all ports, got %+v", forwards)
+	}
+	if forwards[0].Target.Port != 10247 {
+		t.Fatalf("expected the default port of kwok, got %d", forwards[0].Target.Port)
+	}
+
+	pf, err = getDefaultClusterPortForward(12345)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := pf.Spec.Forwards[0].Target.Port; got != 12345 {
+		t.Fatalf("expected the overridden port, got %d", got)
+	}
+}
