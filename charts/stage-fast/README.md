@@ -28,3 +28,9 @@ Set up default metrics usage policy (optional)
 ```shell
 helm upgrade --install kwok kwok/metrics-usage
 ```
+
+Set up default exec policy (optional)
+
+```shell
+helm upgrade --install kwok kwok/exec-local
+```

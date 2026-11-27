@@ -29,6 +29,12 @@ Set up default metrics usage policy (optional)
 helm upgrade --install kwok kwok/metrics-usage
 ```
 
+Set up default exec policy (optional)
+
+```shell
+helm upgrade --install kwok kwok/exec-local
+```
+
 ## Configuration
 
 The following table lists the configurable parameters of the kwok chart and their default values.

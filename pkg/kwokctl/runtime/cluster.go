@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"slices"
 
+	execlocal "sigs.k8s.io/kwok/kustomize/exec/local"
 	"sigs.k8s.io/kwok/kustomize/metrics/resource"
 	"sigs.k8s.io/kwok/kustomize/metrics/usage"
 	nodefast "sigs.k8s.io/kwok/kustomize/stage/node/fast"
@@ -260,8 +261,16 @@ func (c *Cluster) Save(ctx context.Context) error {
 	}
 
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.ClusterExecKind) {
-		stages := config.FilterWithTypeFromContext[*internalversion.ClusterExec](ctx)
-		objs = appendIntoInternalObjects(objs, stages...)
+		clusterExecs := config.FilterWithTypeFromContext[*internalversion.ClusterExec](ctx)
+		if len(clusterExecs) != 0 {
+			objs = appendIntoInternalObjects(objs, clusterExecs...)
+		} else {
+			e, err := getDefaultClusterExec()
+			if err != nil {
+				return err
+			}
+			objs = appendIntoInternalObjects(objs, e)
+		}
 	}
 
 	if !slices.Contains(conf.Options.EnableCRDs, v1alpha1.LogsKind) {
@@ -336,6 +345,10 @@ func getDefaultPodStages() ([]config.InternalObject, error) {
 		podfast.DefaultPodComplete,
 		podfast.DefaultPodDelete,
 	}, config.UnmarshalWithType[config.InternalObject, string])
+}
+
+func getDefaultClusterExec() (*internalversion.ClusterExec, error) {
+	return config.UnmarshalWithType[*internalversion.ClusterExec, string](execlocal.DefaultClusterExecLocal)
 }
 
 // GetComponent returns the component by name
