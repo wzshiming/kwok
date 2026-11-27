@@ -78,9 +78,14 @@ function sync() {
   sync_stage_to_chart kustomize/metrics/resource/metrics-resource.yaml charts/metrics-usage/templates/metrics-resource.yaml
   sync_stage_to_chart kustomize/metrics/usage/usage-from-annotation.yaml charts/metrics-usage/templates/usage-from-annotation.yaml
 
+  sync_stage_to_chart kustomize/exec/local/cluster-exec-local.yaml charts/exec-local/templates/cluster-exec-local.yaml
+  sync_stage_to_chart kustomize/port-forward/local/cluster-port-forward-local.yaml charts/port-forward-local/templates/cluster-port-forward-local.yaml
+
   update_readme kwok
   update_readme stage-fast
   update_readme metrics-usage
+  update_readme exec-local
+  update_readme port-forward-local
 }
 
 cd "${ROOT_DIR}" && sync

@@ -86,10 +86,36 @@ ClusterPortForward has an additional `selector` field for specifying the target 
 
 The `forwards` field of ClusterPortForward has the same semantic with the one in PortForward.
 
+## Default ClusterPortForward
+
+`kwokctl` loads a [default ClusterPortForward][port-forward-local] when the configuration has no ClusterPortForward,
+so that `kubectl port-forward` works out of the box for all pods managed by `kwok`.
+
+``` yaml
+kind: ClusterPortForward
+apiVersion: kwok.x-k8s.io/v1alpha1
+metadata:
+  name: cluster-port-forward-local
+spec:
+  forwards:
+  - target:
+      address: 127.0.0.1
+      port: 10247
+```
+
+There is no real container behind a fake pod, so every port of the pod is forwarded to the server of `kwok` itself,
+which serves endpoints such as `/healthz` and `/metrics`.
+With the binary runtime of `kwokctl`, the port is replaced with the one `kwok` actually listens on.
+
+Any ClusterPortForward in the configuration replaces the default one.
+For `kwok` installed in a cluster, see [`kwok` in cluster][kwok-in-cluster] for how to set it up.
+
 ## Examples
 
 <img width="700px" src="/img/demo/port-forward.svg">
 
+[port-forward-local]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/port-forward/local
+[kwok-in-cluster]: {{< relref "/docs/user/kwok-in-cluster" >}}
 [configuration]: {{< relref "/docs/user/configuration" >}}
 [PortForward]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.PortForward
 [ClusterPortForward]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterPortForward

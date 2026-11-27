@@ -85,10 +85,35 @@ ClusterExec has an additional `selector` field for specifying the target pods to
 
 The `execs` field of ClusterExec has the same semantic with the one in Exec.
 
+## Default ClusterExec
+
+`kwokctl` loads a [default ClusterExec][exec-local] when the configuration has no ClusterExec,
+so that `kubectl exec` works out of the box for all pods managed by `kwok`.
+
+``` yaml
+kind: ClusterExec
+apiVersion: kwok.x-k8s.io/v1alpha1
+metadata:
+  name: cluster-exec-local
+spec:
+  execs:
+  - local: {}
+```
+
+Any ClusterExec in the configuration replaces the default one.
+For `kwok` installed in a cluster, see [`kwok` in cluster][kwok-in-cluster] for how to set it up.
+
+{{< hint "warning" >}}
+There is no real container behind a fake pod, so the command is executed where `kwok` is running:
+directly on the host for the binary runtime of `kwokctl`, or inside the `kwok-controller` container otherwise.
+{{< /hint >}}
+
 ## Examples
 
 <img width="700px" src="/img/demo/exec.svg">
 
+[exec-local]: https://github.com/kubernetes-sigs/kwok/tree/main/kustomize/exec/local
+[kwok-in-cluster]: {{< relref "/docs/user/kwok-in-cluster" >}}
 [configuration]: {{< relref "/docs/user/configuration" >}}
 [Exec]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.Exec
 [ClusterExec]: {{< relref "/docs/generated/apis" >}}#kwok.x-k8s.io/v1alpha1.ClusterExec

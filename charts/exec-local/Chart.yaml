@@ -1,0 +1,17 @@
+apiVersion: v2
+description: Default exec policy of KWOK (Kubernetes WithOut Kubelet)
+type: application
+home: https://kwok.sigs.k8s.io
+icon: https://github.com/kubernetes-sigs/kwok/raw/main/logo/kwok.png
+keywords:
+- kubernetes
+- kwok
+- kwok exec policy
+sources:
+- https://github.com/kubernetes-sigs/kwok
+name: exec-local
+maintainers:
+- name: wzshiming
+  email: wzshiming@hotmail.com
+appVersion: v0.8.0
+version: 0.1.0
